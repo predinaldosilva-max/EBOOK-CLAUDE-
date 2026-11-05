@@ -34,7 +34,7 @@ const assert=require('node:assert/strict');
   await page.goto((local?'http://127.0.0.1/EBOOK-CLAUDE-/':host)+suffix);
   assert.equal(await page.locator('#commercial-content').isVisible(),allowed,name);
   assert.equal(await page.locator('#device-notice').isVisible(),!allowed,name);
-  if(allowed){assert.equal(await page.locator('[data-checkout]:disabled').count(),2);assert(await page.locator('img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth)));}
+  if(allowed){assert.equal(await page.locator('[data-checkout]:disabled').count(),0);assert(await page.locator('img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth)));}
   else{assert.equal(await page.locator('#device-notice').textContent().then(s=>s.includes('Esta página está disponível exclusivamente para dispositivos móveis. Acesse pelo seu smartphone para conhecer o Claude Masterclass.')),true);}
   assert.deepEqual(errors,[],name);
   if(name==='macOS Safari')await page.screenshot({path:'docs/previa-restricao-desktop.png'});

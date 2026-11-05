@@ -1,7 +1,6 @@
-// Configure somente após conferir pacote, entrega, suporte e condições legais.
-// URLs vazias mantêm os botões desabilitados. Nunca insira links de exemplo.
+// Checkout oficial fornecido pelo produtor. Não incluir credenciais neste arquivo público.
 window.CLAUDE_CHECKOUT = Object.freeze({
-  salesEnabled: false,
+  salesEnabled: true,
   hotmart: "",
-  kiwify: ""
+  kiwify: "https://pay.kiwify.com.br/hFxie8I"
 });

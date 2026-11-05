@@ -10,7 +10,7 @@ const base = process.env.SITE_URL || 'http://127.0.0.1:8000/';
  await page.goto(base,{waitUntil:'networkidle'});
  assert.equal(await page.locator('h1').count(),1);
  assert.equal(await page.locator('.program details').count(),12);
- assert.equal(await page.locator('[data-checkout]:disabled').count(),2);
+ assert.equal(await page.locator('[data-checkout]:disabled').count(),0);
  for(const size of [{width:1440,height:1000},{width:390,height:844},{width:320,height:740},{width:768,height:1024}]){
   await page.setViewportSize(size);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${size.width}`);
@@ -27,7 +27,7 @@ const base = process.env.SITE_URL || 'http://127.0.0.1:8000/';
  assert.equal(await page.locator('link[rel=canonical]').count(),1);
  assert.equal(await page.locator('meta[property="og:image"]').count(),1);
  await page.route('**/config.js',r=>r.fulfill({contentType:'application/javascript',body:'window.CLAUDE_CHECKOUT={salesEnabled:true,hotmart:"https://example.com/invalido",kiwify:"javascript:alert(1)"}'}));
- await page.reload();assert.equal(await page.locator('[data-checkout]:disabled').count(),2);
+ await page.reload();assert.equal(await page.locator('button[data-checkout]:disabled').count(),2);
  await page.unroute('**/config.js');await page.goto(base,{waitUntil:'networkidle'});
  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'docs/previa-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'docs/previa-celular.png',fullPage:true});

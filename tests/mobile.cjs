@@ -9,7 +9,7 @@ const assert=require('node:assert/strict');
   await page.goto(url,{waitUntil:'networkidle'});
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('.nav-cta').tap();await page.waitForTimeout(200);assert(page.url().endsWith('#oferta'));
-  assert.equal(await page.locator('[data-checkout]:disabled').count(),2);
+  assert.equal(await page.locator('[data-checkout]:disabled').count(),0);
   await context.close();assert.deepEqual(errors,[]);console.log('PASS Chromium/touch emulado:',device);
  }
  const page=await browser.newPage();const session=await page.context().newCDPSession(page);
