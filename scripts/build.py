@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, unquote
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'assets/capa.png', 'assets/capa.webp', 'assets/favicon.svg')
+PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'device-access.js', 'assets/capa.png', 'assets/capa.webp', 'assets/favicon.svg')
 
 class Resources(HTMLParser):
     def __init__(self):

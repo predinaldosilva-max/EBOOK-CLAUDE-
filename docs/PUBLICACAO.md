@@ -14,7 +14,7 @@ node --check config.js
 python3 -m http.server 8000 --bind 127.0.0.1 --directory dist
 ```
 
-O build gera oito arquivos: index.html, styles.css, app.js, config.js, assets/capa.png, assets/capa.webp, assets/favicon.svg e .nojekyll. A WebP otimizada é usada na página; PNG é mantida para compartilhamento social. É uma lista explícita: arquivos novos não entram automaticamente. PDFs, ZIPs, credenciais, anexos, documentação e testes não são publicados pelo workflow. Não selecione publicação da raiz por branch.
+O build gera nove arquivos: index.html, styles.css, app.js, config.js, device-access.js, assets/capa.png, assets/capa.webp, assets/favicon.svg e .nojekyll. A WebP otimizada é usada na página; PNG é mantida para compartilhamento social. É uma lista explícita: arquivos novos não entram automaticamente. PDFs, ZIPs, credenciais, anexos, documentação e testes não são publicados pelo workflow. Não selecione publicação da raiz por branch.
 
 Todos os recursos são relativos, compatíveis com `/EBOOK-CLAUDE-/`, sem configuração de base de framework. Nenhuma URL de pagamento foi adicionada; salesEnabled permanece false.
 
@@ -37,3 +37,6 @@ config.js reserva Hotmart/Kiwify, com URLs vazias e vendas desabilitadas. A conf
 
 ## Estado observado nesta entrega
 Código e workflow enviados à main. Build local e build remoto aprovados. Deploy não concluído: a API de deploy retornou 404 com orientação para habilitar GitHub Pages. A URL esperada retornou 404. Na auditoria atual, a visibilidade pública foi confirmada. Para continuar: habilitar Pages com Source = GitHub Actions e executar novamente o workflow. A tentativa de ativação pela integração retornou HTTP 403; essa configuração precisa ser feita pelo responsável no GitHub.
+
+## Acesso por dispositivo
+A interface pública é restrita em desktops/notebooks; smartphones e tablets são permitidos. Para testar pelo MacBook, siga ACESSO_POR_DISPOSITIVO.md e execute a prévia em loopback na sua máquina. Não há autenticação administrativa pública nem bloqueio de segurança.

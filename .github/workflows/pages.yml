@@ -22,6 +22,7 @@ jobs:
         run: |
           node --check app.js
           node --check config.js
+          node --check device-access.js
       - name: Construir e validar arquivos públicos
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Enviar somente o artefato público
