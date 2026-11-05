@@ -34,3 +34,7 @@ Os testes podem ser repetidos com o servidor local ativo e `node tests/browser.c
 - Build servido localmente sob /EBOOK-CLAUDE-/ para testar recursos relativos como no endereço do repositório.
 - Corrigido tratamento de fragmento malformado para impedir URIError na navegação; incluído caso no teste de navegador.
 - Leitura Git remota e identificação do repositório validadas. A API informou repositório privado. Consultas de Pages e permissões de Actions retornaram 403 por limitação da integração.
+- Teste final do build no Chromium sob /EBOOK-CLAUDE-/ aprovado nas quatro larguras, com imagens, navegação, fragmento malformado, acordeões e bloqueio de checkout sem configuração/URL inválida; zero erros JavaScript/HTTP.
+- Código enviado com sucesso à main (commit bd37781c9fc2628587a277ad4917538fa707a77d).
+- Build no GitHub Actions também aprovado: checkout, sintaxe, quatro testes e upload do artefato público. Execução: https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/actions/runs/42040195561
+- Deploy falhou: GitHub retornou 404 e solicitou habilitar Pages em Settings → Pages. A URL pública esperada foi consultada e retornou HTTP 404. A publicação não foi concluída.

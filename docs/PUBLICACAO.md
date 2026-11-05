@@ -34,3 +34,6 @@ Abrir a URL informada pelo GitHub em Android/Chrome, iPhone/Safari e tablet; con
 
 ## Checkout futuro e limitações comerciais
 config.js reserva Hotmart/Kiwify, com URLs vazias e vendas desabilitadas. A configuração de Kiwify não faz parte desta etapa. O botão principal mantém navegação para a oferta; a compra só deve ser habilitada quando houver URL oficial, condições comerciais, entrega e suporte confirmados. A página pode ser apresentada publicamente como prévia, mas não como compra funcional.
+
+## Estado observado nesta entrega
+Código e workflow enviados à main. Build local e build remoto aprovados. Deploy não concluído: a API de deploy retornou 404 com orientação para habilitar GitHub Pages. A URL esperada retornou 404. Para continuar: resolver a elegibilidade do repositório privado para hospedagem gratuita, habilitar Pages com Source = GitHub Actions e executar novamente o workflow. A visibilidade não foi alterada.
