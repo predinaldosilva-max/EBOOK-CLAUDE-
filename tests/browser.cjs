@@ -21,6 +21,11 @@ const base = process.env.SITE_URL || 'http://127.0.0.1:8000/';
  await page.locator('footer a[href="#privacidade"]').click();await page.waitForTimeout(200);assert(await page.locator('#privacidade').getAttribute('open')!==null);
  await page.goto(base + '#termos');assert(await page.locator('#termos').getAttribute('open')!==null);
  await page.goto(base + '#%E0%A4%A');
+ for (const summary of await page.locator('.faq summary').all()) { await summary.click(); assert(await summary.evaluate(s=>s.parentElement.open)); }
+ await page.goto(base);
+ await page.keyboard.press('Tab'); assert.equal(await page.evaluate(()=>document.activeElement.className),'skip');
+ assert.equal(await page.locator('link[rel=canonical]').count(),1);
+ assert.equal(await page.locator('meta[property="og:image"]').count(),1);
  await page.route('**/config.js',r=>r.fulfill({contentType:'application/javascript',body:'window.CLAUDE_CHECKOUT={salesEnabled:true,hotmart:"https://example.com/invalido",kiwify:"javascript:alert(1)"}'}));
  await page.reload();assert.equal(await page.locator('[data-checkout]:disabled').count(),2);
  await page.unroute('**/config.js');await page.goto(base,{waitUntil:'networkidle'});

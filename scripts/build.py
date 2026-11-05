@@ -1,11 +1,11 @@
-"""Build estático: exporta somente os cinco arquivos públicos aprovados."""
+"""Build estático: exporta somente os arquivos públicos aprovados."""
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit, unquote
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'assets/capa.png', 'assets/favicon.svg')
+PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'assets/capa.png', 'assets/capa.webp', 'assets/favicon.svg')
 
 class Resources(HTMLParser):
     def __init__(self):
@@ -15,7 +15,7 @@ class Resources(HTMLParser):
         attrs = dict(attrs)
         if tag in ('img', 'script') and attrs.get('src'):
             self.resources.append(attrs['src'])
-        if tag == 'link' and attrs.get('href'):
+        if tag == 'link' and attrs.get('href') and attrs.get('rel') != 'canonical':
             self.resources.append(attrs['href'])
 
 def build(destination=None):
