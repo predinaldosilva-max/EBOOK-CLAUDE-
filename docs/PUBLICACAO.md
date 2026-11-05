@@ -40,3 +40,6 @@ Código e workflow enviados à main. Build local e build remoto aprovados. Deplo
 
 ## Acesso por dispositivo
 A interface pública é restrita em desktops/notebooks; smartphones e tablets são permitidos. Para testar pelo MacBook, siga ACESSO_POR_DISPOSITIVO.md e execute a prévia em loopback na sua máquina. Não há autenticação administrativa pública nem bloqueio de segurança.
+
+## Estado mais recente — restrição por dispositivo
+O Pages está agora configurado para workflow. A execução 42047928321 concluiu build e deploy com sucesso. A URL pública respondeu HTTP 200 e foi validada no Chromium com desktop restrito e smartphone/tablet permitidos. As falhas de ativação citadas acima são registros de etapas anteriores já superadas. Instruções de uso do MacBook e limitações estão em ACESSO_POR_DISPOSITIVO.md.

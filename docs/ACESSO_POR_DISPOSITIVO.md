@@ -32,3 +32,8 @@ Para regras antes da entrega seriam necessários servidor/proxy ou camada de bor
 - Conteúdo comercial e aviso aparecem de forma mutuamente exclusiva. Nos cenários permitidos, capa carregada e checkout permanece desabilitado conforme configuração original. Nenhum erro JavaScript nos cenários.
 - Origem pública simulada não é teste do endereço publicado. Perfis Safari/macOS/Windows são identificações emuladas no Chromium/Linux, não execução nos navegadores/sistemas reais.
 - Safari/WebKit real, iPhone/Android físicos e Windows/macOS reais permanecem pendentes.
+
+## Publicação verificada
+Alteração publicada pelo workflow https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/actions/runs/42047928321 : build e deploy aprovados. Endereço real https://predinaldosilva-max.github.io/EBOOK-CLAUDE-/ verificado por HTTPS com HTTP 200. No Chromium acessando o site público (sem interceptar recursos), desktop exibiu a tela restrita; perfis smartphone Pixel 7 e tablet iPad exibiram a landing page, com imagens carregadas e sem erros JavaScript. Também confirmados HTML e script de restrição publicados por requisição HTTPS independente. A ressalva sobre emulação de aparelhos e navegadores permanece.
+
+Regressão da prévia local: navegação, quatro larguras sem overflow, metadados, FAQ, imagens e bloqueio de checkout sem configuração passaram. Perfis móveis de toque passaram novamente. Nenhum arquivo de checkout foi alterado.
