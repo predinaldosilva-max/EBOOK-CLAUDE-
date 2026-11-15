@@ -1,7 +1,7 @@
 /* Pure calculation functions. USD, miles and hours. No network or dependencies. */
 (function(root){
 'use strict';
-function number(v,positive=false){if(!['number','string'].includes(typeof v)||(typeof v==='string'&&(!v.trim()||!/^\d+(?:\.\d*)?$/.test(v.trim()))))throw Error('invalid');const n=Number(v);if(!Number.isFinite(n)||n<0||n>1e9||(positive&&n===0))throw Error('invalid');return n;}
+function number(v,positive=false){if(!['number','string'].includes(typeof v)||(typeof v==='string'&&(!v.trim()||!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(v.trim()))))throw Error('invalid');const n=Number(v);if(!Number.isFinite(n)||n<0||n>1e9||(positive&&n===0))throw Error('invalid');return n;}
 function checked(o){if(Object.values(o).some(v=>typeof v==='number'&&(!Number.isFinite(v)||Math.abs(v)>1e12)))throw Error('invalid');return o;}
 const C={number,
  delivery(d){const gross=number(d.offer)+number(d.tip),cost=number(d.miles)*number(d.cost),hours=(number(d.minutes,true)+number(d.wait))/60;return checked({gross,cost,net:gross-cost,hourly:(gross-cost)/hours,perMile:number(d.miles)>0?gross/number(d.miles):null,hours});},
