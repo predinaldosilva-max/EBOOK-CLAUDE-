@@ -34,7 +34,7 @@ test('Corrupt storage is detected',()=>{raw='{invalid';assert.deepEqual(S.load()
 const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../js/reports.js'),'utf8'),ctx);const R=ctx.window.Reports;
 test('Report reconciliation and period boundaries',()=>{const r=R.totals({...s,expenses:[{date:'2026-11-14',amount:3},{date:'2026-12-01',amount:100}]},'2026-11-01','2026-11-30');assert.equal(r.gross,25);assert.equal(r.cost,5);assert.equal(r.extra,3);assert.equal(r.net,17);});
 test('HTML escape',()=>assert.equal(R.escape('<img onerror="x">'), '&lt;img onerror=&quot;x&quot;&gt;'));
-test('CSV injection and quote/newline escaping',()=>{const csv=R.csv([['=1+1','a"b','a\nb',-3,' @SUM(A1)']]);assert.ok(csv.includes("'="));assert.ok(csv.includes('a""b'));assert.ok(csv.includes("'-3"));assert.ok(csv.includes("' @"));});
+test('CSV injection and quote/newline escaping',()=>{const csv=R.csv([['=1+1','a"b','a\nb',-3,' @SUM(A1)']]);assert.ok(csv.includes("'="));assert.ok(csv.includes('a""b'));assert.ok(csv.includes('"-3"'));assert.ok(!csv.includes("'-3"));assert.ok(csv.includes("' @"));});
 vm.runInContext(fs.readFileSync(require.resolve('../js/translations.js'),'utf8'),ctx);test('PT and ES keys match',()=>assert.deepEqual(Object.keys(ctx.window.I18N.pt).sort(),Object.keys(ctx.window.I18N.es).sort()));
 test('Local asset references exist',()=>{const path=require('node:path'),root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const match of html.matchAll(/(?:src|href)="([^"]+)"/g))assert.ok(fs.existsSync(path.join(root,match[1])),match[1]);});
 console.log('\n'+passed+' tests passed.');
