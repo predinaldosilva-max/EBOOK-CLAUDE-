@@ -10,3 +10,5 @@
 .device-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:#112b41;margin:0;width:100%;box-sizing:border-box}
 .device-card{max-width:540px;background:#fff;color:#112b41;border-radius:24px;padding:40px;text-align:center;box-shadow:0 20px 70px #0003}
 .device-brand{font-weight:800;letter-spacing:.07em}.device-card h1{font-size:30px;line-height:1.2}.device-card h2{font-size:24px}.device-card p{line-height:1.6}.device-card hr{border:0;border-top:1px solid #dce6e6;margin:28px 0}.device-note{font-size:14px;color:#52616b}
+
+#accessForm{text-align:left;display:grid;gap:12px}#accessForm input{width:100%;box-sizing:border-box}#accessForm button{background:#147859;color:white;min-height:48px;border:0;border-radius:12px;font-weight:700}#accessError{color:#a52323;font-size:14px}#lockAccess{font-size:12px;padding:10px;border:1px solid #cad8da;border-radius:10px;background:white;color:#112b41}.topbar{flex-wrap:wrap;gap:10px}
