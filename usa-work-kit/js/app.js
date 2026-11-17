@@ -17,8 +17,27 @@ let grant=null,installation='';
 async function accessRequest(path,payload){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
  try{const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,installation}),cache:'no-store',signal:controller.signal});
- const result=await response.json();if(!response.ok)throw Error(result.error||'unavailable');return result;
+ let result;try{result=await response.json();}catch{throw Error('http_'+(response.status||'unknown'));}
+ if(!response.ok)throw Error(result.error||('http_'+response.status));
+ if(result.ok!==true)throw Error('unexpected_response');return result;
  }finally{clearTimeout(timer);}
+}
+function accessErrorMessage(e){
+ const messages={
+ invalid:'Senha inválida. Use o código completo UW- e 16 caracteres. / Contraseña incorrecta. Usa el código completo UW- y 16 caracteres.',
+ invalid_or_bound:'Senha inválida ou já ativada em outra instalação. Fale com o vendedor. / Contraseña incorrecta o activada en otra instalación. Contacta al vendedor.',
+ storage:'Permita armazenamento neste navegador. / Permite almacenamiento en este navegador.',
+ rate:'Muitas tentativas. Aguarde 15 minutos. / Demasiados intentos. Espera 15 minutos.',
+ configuration:'Configuração incompleta no servidor. Contate o vendedor. / Configuración incompleta del servidor. Contacta al vendedor.',
+ unavailable:'Servidor ou banco temporariamente indisponível. / Servidor o base de datos temporalmente no disponible.',
+ origin:'Origem do acesso recusada. Abra o link no Safari ou Chrome. / Origen rechazado. Abre el enlace en Safari o Chrome.',
+ input:'Dados de ativação inválidos. Contate o vendedor. / Datos de activación incorrectos. Contacta al vendedor.'
+ };
+ const code=e.name==='AbortError'?'timeout':e.message;
+ if(messages[code])return messages[code]+' ['+code+']';
+ if(code==='timeout')return 'O servidor demorou para responder. Tente novamente. / El servidor tardó en responder. Intenta de nuevo. [timeout]';
+ if(/^http_[0-9]{3}$/.test(code))return 'Resposta inesperada do servidor. / Respuesta inesperada del servidor. ['+code+']';
+ return 'Não foi possível concluir o acesso. Abra no Safari ou Chrome e confira a conexão. / No se pudo completar el acceso. Abre en Safari o Chrome y comprueba la conexión. [network_or_browser]';
 }
 async function requireAccess(){
  try{
@@ -33,17 +52,19 @@ async function requireAccess(){
   if(grant){try{await accessRequest('validate',grant);return true;}catch{}}
  }catch{installation='';}
  const host=document.getElementById('app');
- host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><h2>Acceso del comprador</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="32" required><button type="submit">Entrar</button><p id="accessError" role="alert"></p></form><p>Conexão necessária para validar o acesso. / Conexión necesaria para validar el acceso.</p><p class="device-note">A senha fica vinculada a esta instalação. Não limpe os dados do navegador. / La contraseña queda vinculada a esta instalación. No borres los datos del navegador.</p></section></main>';
+ host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><small>v1.1.1</small><h2>Acceso del comprador</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="32" required><button type="submit">Entrar</button><p id="accessError" role="alert"></p></form><p>Conexão necessária para validar o acesso. / Conexión necesaria para validar el acceso.</p><p class="device-note">A senha fica vinculada a esta instalação. Não limpe os dados do navegador. / La contraseña queda vinculada a esta instalación. No borres los datos del navegador.</p></section></main>';
  return new Promise(resolve=>{
  const form=document.getElementById('accessForm'),input=document.getElementById('accessPassword'),error=document.getElementById('accessError');
  form.onsubmit=async event=>{
  event.preventDefault();const button=form.querySelector('button');button.disabled=true;
  try{
   if(!installation)throw Error('storage');
-  grant=await accessRequest('activate',{password:input.value});
+  const password=input.value.trim().toUpperCase();
+  if(!/^UW-[A-F0-9]{16}$/.test(password))throw Error('invalid');
+  grant=await accessRequest('activate',{password});
   localStorage.setItem(ACCESS_KEY,JSON.stringify({license:grant.license,generation:grant.generation,token:grant.token}));
   input.value='';resolve(true);
- }catch(e){error.textContent=e.message==='invalid_or_bound'?'Senha inválida ou já ativada em outra instalação. Fale com o vendedor. / Contraseña incorrecta o activada en otra instalación. Contacta al vendedor.':e.message==='storage'?'Permita armazenamento neste navegador. / Permite almacenamiento en este navegador.':e.message==='rate'?'Muitas tentativas. Aguarde 15 minutos. / Demasiados intentos. Espera 15 minutos.':'Conecte-se à internet e tente novamente. / Conéctate a internet e intenta de nuevo.';}
+ }catch(e){error.textContent=accessErrorMessage(e);}
  finally{button.disabled=false;}
  };
  });
@@ -69,7 +90,7 @@ const numField=(k,l,v)=>field(k,l,v);
 const draft=(k,defaults)=>Object.assign({},defaults,state.drafts[k]||{});
 const formValues=()=>Object.fromEntries(new FormData($('#toolForm')));
 function pageHeader(){return `<div class="hero"><div><div class="eyebrow">SMART TOOLS FOR WORKERS</div><h1>${esc(t(page==='home'?'tagline':page))}</h1><p>${esc(page==='home'?t('intro'):(t(page+'Desc')===page+'Desc'?t('live'):t(page+'Desc')))}</p></div><span class="badge"><span class="dot" style="background:#147857"></span>${esc(t('local'))}</span></div>`;}
-function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':'es';$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home',...modules,'reports'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español<br>v1.1.0</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option></select><button id="lockAccess" type="button">${state.lang==='pt'?'Bloquear acesso':'Bloquear acceso'}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
+function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':'es';$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home',...modules,'reports'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español<br>v1.1.1</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option></select><button id="lockAccess" type="button">${state.lang==='pt'?'Bloquear acesso':'Bloquear acceso'}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
  ({home:renderHome,delivery:renderDelivery,work:renderWork,goals:renderGoals,expenses:renderExpenses,pricing:renderPricing,messages:renderMessages,reports:renderReports})[page]();
  $('#lockAccess').onclick=()=>{try{localStorage.removeItem(ACCESS_KEY);}catch(e){}location.reload();};
  $('#language').onchange=e=>{if(page==='expenses'&&$('#toolForm')){expenseDraft=formValues();expenseDraft.paid=$('#paid').checked;}state.lang=e.target.value;persist();render();};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>navigate(b.dataset.page));document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
