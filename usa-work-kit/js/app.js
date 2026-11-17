@@ -10,36 +10,48 @@ if(!isPhone(navigator.userAgent||'')){
 }
 
 
-// BEGIN ACCESS: simple local password gate, intentionally not server authentication.
-const ACCESS_HASHES=["87c58c142cd743b241fd4117bab904f6b674262fc6e281e16b63c78894083a96", "74414ebc0c2e0eba93afc5f7232b2ccc065989ea399194025a32cb64820d7920", "a8ba67925b97eddece13eeac2ced46c98049acdb812ff120525e518c2596c332", "7fe13a5cf9bae9cb46eb921ccce0d98e95e4620ba4a227e164aa6e774d48ae29", "3d499f6308ef15b82e0e9c48ba5d6450edeca7744010c16b89d0189c83f62f78", "6b296001f5622a5b4e2576e27bf398fc9f44ae794b3d70aae62c6ee4aeaac01f", "ba4b5b4098e628f351a5ff34938537167aa070640eef5742af94124d079d29fe", "f6e682ac560dbe7425c39f2fb4fdf25cbeaf293856b0cb91b888c98d92db4ec3", "c5227b17d86cd31b59d00a3cf5e1c742ddba36126ceb75196f252621756a19ca", "2be4fedef0181d641686c1ee9ccc11505342913868cfd00a8e910c3a26cc1204", "feb603d675dc621f3634071b18cda32c5ad70db827917cf487ad79cde9b0fe2c", "54d48e66dac42b1de8804393d6a36e3c7c5437b96f4eebc57a5ddb5a26c26d97", "f1b63fee21e935a5ca1ebe16985cfcf7799b262ee6b349d5d6fc5b27442c917f", "243593e10f57e97baa6ca101682f3a9ed8c3a4e23d896f848fa72c6609e9c0ef", "7853cd6fda13d03ed7017457c6bda567aa591399c70354c58f9d4e2143efb25f", "4a4b60ce4ead936006694ee6423206368ba09a5b0fed2e0c66e4f9a504d625f5", "35e5f79a084d897b5ec0102d488a790ee353a4785347f4e925a36639e9cd8b9c", "b41fed6bb7010f77d59605d7f3f09f3111e28f1a7a94d822b3b325b25f8d753b", "58bef89293540338fa5e1efa71039a16c051195115e796ab879f6ebd5972aea6", "24c664843fd87ae9d0c7817cb2ed82097e8d59c25e2293e467fd5b2b7b5d187f", "a889593d592d6c798b5762ce6e6d523d266e86e7b507b3f6a80005de057c4f9f", "df68f0526a6a898da292a090e41c985ee200f8c1a88512ceb6e3251fe446e719", "27d41d02054add40f1321eae7138d8eb6fc376363046af51354b2e3ca6c8873e", "a79b036b13d93a1a644ec3702ac842b00ececb552ea2a303c4d7d39171c12dc3", "b5d7f7f2086b9ab3c4911020642b77e11af4f557ef43a27c00d1519aef3a78a8", "bc08dc22bb97dba592d4c26d37c2344043666b8e19aacc461b2d1617aac8c1bf", "89a8e6f02a64d3ed207b7c447eb62fe2f327b3b037d9260122a4b45e578ae467", "f8ca37bc781a5a197e114a97639caa4bd9bba071535beaa9f52adb89e1352740", "39d58586d12ada77f6adf32ce14891b82441481939c8a64b6ff63f11314cb7fa", "b32636445ff0828f74a3675182962d2b8b849a621e917d47e0a455047bfe2685", "2d54f42750c5fb0a6e173f774c391e53a536acea79d619f5fa65a61cfa110bf8", "923bfd2911771083c3b7a3bdc03792e705986c9096d860b922391983a3b543c7", "949f14a700df596312c9f92d4463d42cfe2a1ee64e00e411c55b2a8afdf9c44f", "c81b745c6bfeb30e983e9288e371840025e2f86cb4af9adcfc4a91afbbf1eda1", "ca35a33edb7b289020345f8b7ac73fcf1582b2dce0438dee133a88fa70f13e28", "b99f58d56f60fe5724141834a545241bf687c51d3724b32719d40963c4e1b683", "0931e7c363a2309e5b8bfdc8d906293d85413ea33fefde72529332e674e98f7c", "928283d2f0e968379f61d4ee423a72af3f702035ad12ee64f4d8ebfaca7a9c3b", "fd34aceb3fbb305f398e1beb541b75d3c09aa952a6ec6743fab7464b0345f0b8", "753c6e90bfe066a7b6acddfb810d09a1a165b07838f3f3d0b7a6d5d07b0fea41", "f0f6f0300d47bd5b6e5cd378ce8df0a22cb5ca6007a208d29eedd0588541d938", "a8fc5c65831e608608dd5f1111b1e905e990569b00104d47ac17cd8f1698dbde", "f2aa473b4cf8c871e89a9a1da078ebb3bb5c31c9c488d7eaa281385cd846c7ea", "6c75422fe110ee84cce6a7e9ef2e5d2a5369864ce91dc1ebc6e2eaf6f5d8eb6f", "8031c9b89d3a4430194479b97c24bcb8113755bce34b84855f2c97278c5b32b2", "cd19816fc859df81362eb8c3a8e69413cfefc8c8ef4c644851a0ae35587dc9af", "a2aab9850e096341e8acfc7600bd507d3cf64c93cedd2753153741daecaa5b37", "6f42c08d5b99519802831f4ad08f2b234e1fefeae5b40e0dbc2b5399a5d51249", "29e2f2ab832703a8a201ee70720b49f34d8aaa4e30aa83dec70693ebcee012d6", "83d9a2e6da48a3083b587b989a9a9e487d7f28d62c5e1abb1e0cfe6c8274275e"];
-const ACCESS_KEY='usa-work-kit-access-v1';
-async function accessHash(value){
- const normalized=String(value).trim().toUpperCase();
- if(!/^UW-[0-9A-F]{16}$/.test(normalized))return '';
- const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(normalized));
- return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+// BEGIN ACCESS: server activation. Legacy local grants are never trusted.
+const ACCESS_KEY='usa-work-kit-server-access-v1';
+const INSTALL_KEY='usa-work-kit-installation-v1';
+let grant=null,installation='';
+async function accessRequest(path,payload){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ try{const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,installation}),cache:'no-store',signal:controller.signal});
+ const result=await response.json();if(!response.ok)throw Error(result.error||'unavailable');return result;
+ }finally{clearTimeout(timer);}
 }
 async function requireAccess(){
- try{if(ACCESS_HASHES.includes(localStorage.getItem(ACCESS_KEY)))return true;}catch(e){}
+ try{
+  localStorage.removeItem('usa-work-kit-access-v1');
+  installation=localStorage.getItem(INSTALL_KEY)||'';
+  if(!/^[-_A-Za-z0-9]{43}$/.test(installation)){
+   installation=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+   localStorage.setItem(INSTALL_KEY,installation);
+  }
+  if(localStorage.getItem(INSTALL_KEY)!==installation)throw Error('storage');
+  grant=JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');
+  if(grant){try{await accessRequest('validate',grant);return true;}catch{}}
+ }catch{installation='';}
  const host=document.getElementById('app');
- host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><h2>Acceso del comprador</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="32" required><button type="submit">Entrar</button><p id="accessError" role="alert"></p></form><p class="device-note">Sem senha? Fale com o vendedor.<br>¿Sin contraseña? Contacta al vendedor.</p></section></main>';
+ host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><h2>Acceso del comprador</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="32" required><button type="submit">Entrar</button><p id="accessError" role="alert"></p></form><p>Conexão necessária para validar o acesso. / Conexión necesaria para validar el acceso.</p><p class="device-note">A senha fica vinculada a esta instalação. Não limpe os dados do navegador. / La contraseña queda vinculada a esta instalación. No borres los datos del navegador.</p></section></main>';
  return new Promise(resolve=>{
-  const form=document.getElementById('accessForm'),input=document.getElementById('accessPassword'),error=document.getElementById('accessError');
-  form.onsubmit=async event=>{
-   event.preventDefault();const button=form.querySelector('button');button.disabled=true;error.textContent='';
-   try{
-    const hash=await accessHash(input.value);
-    if(!ACCESS_HASHES.includes(hash)){error.textContent='Senha inválida. Confira e tente novamente. / Contraseña incorrecta. Revisa e intenta de nuevo.';return;}
-    try{localStorage.setItem(ACCESS_KEY,hash);}catch(e){}
-    input.value='';resolve(true);
-   }catch(e){error.textContent='Abra o link HTTPS no navegador do celular. / Abre el enlace HTTPS en el navegador del celular.';}
-   finally{button.disabled=false;}
-  };
+ const form=document.getElementById('accessForm'),input=document.getElementById('accessPassword'),error=document.getElementById('accessError');
+ form.onsubmit=async event=>{
+ event.preventDefault();const button=form.querySelector('button');button.disabled=true;
+ try{
+  if(!installation)throw Error('storage');
+  grant=await accessRequest('activate',{password:input.value});
+  localStorage.setItem(ACCESS_KEY,JSON.stringify({license:grant.license,generation:grant.generation,token:grant.token}));
+  input.value='';resolve(true);
+ }catch(e){error.textContent=e.message==='invalid_or_bound'?'Senha inválida ou já ativada em outra instalação. Fale com o vendedor. / Contraseña incorrecta o activada en otra instalación. Contacta al vendedor.':e.message==='storage'?'Permita armazenamento neste navegador. / Permite almacenamiento en este navegador.':e.message==='rate'?'Muitas tentativas. Aguarde 15 minutos. / Demasiados intentos. Espera 15 minutos.':'Conecte-se à internet e tente novamente. / Conéctate a internet e intenta de nuevo.';}
+ finally{button.disabled=false;}
+ };
  });
 }
 // END ACCESS
 if(!await requireAccess())return;
 
+setInterval(async()=>{try{await accessRequest('validate',grant);}catch{location.reload();}},5*60*1000);
 let state=Store.load(),blocked=Store.error==='storageRead',page='home',offerA=null,editing=null,expenseDraft=null,offline=false;
 const $=s=>document.querySelector(s),esc=Reports.escape,t=k=>I18N[state.lang][k]??k;
 const money=n=>n===null?t('dash'):new Intl.NumberFormat(state.lang==='pt'?'pt-BR':'es-US',{style:'currency',currency:'USD'}).format(n);
@@ -57,7 +69,7 @@ const numField=(k,l,v)=>field(k,l,v);
 const draft=(k,defaults)=>Object.assign({},defaults,state.drafts[k]||{});
 const formValues=()=>Object.fromEntries(new FormData($('#toolForm')));
 function pageHeader(){return `<div class="hero"><div><div class="eyebrow">SMART TOOLS FOR WORKERS</div><h1>${esc(t(page==='home'?'tagline':page))}</h1><p>${esc(page==='home'?t('intro'):(t(page+'Desc')===page+'Desc'?t('live'):t(page+'Desc')))}</p></div><span class="badge"><span class="dot" style="background:#147857"></span>${esc(t('local'))}</span></div>`;}
-function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':'es';$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home',...modules,'reports'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español<br>v1.0.3</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option></select><button id="lockAccess" type="button">${state.lang==='pt'?'Bloquear acesso':'Bloquear acceso'}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
+function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':'es';$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home',...modules,'reports'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español<br>v1.1.0</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option></select><button id="lockAccess" type="button">${state.lang==='pt'?'Bloquear acesso':'Bloquear acceso'}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
  ({home:renderHome,delivery:renderDelivery,work:renderWork,goals:renderGoals,expenses:renderExpenses,pricing:renderPricing,messages:renderMessages,reports:renderReports})[page]();
  $('#lockAccess').onclick=()=>{try{localStorage.removeItem(ACCESS_KEY);}catch(e){}location.reload();};
  $('#language').onchange=e=>{if(page==='expenses'&&$('#toolForm')){expenseDraft=formValues();expenseDraft.paid=$('#paid').checked;}state.lang=e.target.value;persist();render();};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>navigate(b.dataset.page));document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));
