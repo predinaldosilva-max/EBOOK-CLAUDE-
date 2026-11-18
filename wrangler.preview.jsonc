@@ -1,0 +1,9 @@
+{
+  "name": "usa-work-kit-local-preview",
+  "main": "server/worker.mjs",
+  "compatibility_date": "2026-11-17",
+  "workers_dev": false,
+  "assets": {"directory": "./usa-work-kit", "binding": "ASSETS", "run_worker_first": ["/api/*"]},
+  "d1_databases": [{"binding": "DB", "database_name": "usa-work-kit-local-fixtures", "database_id": "00000000-0000-0000-0000-000000000001"}],
+  "vars": {"RATE_SECRET": "local-fixture-only-not-a-production-secret", "ADMIN_TOKEN": "local-fixture-only-never-use-in-production"}
+}

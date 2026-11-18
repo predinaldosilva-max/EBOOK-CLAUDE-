@@ -16,6 +16,15 @@
 "database_id": "f1bc1f76-ba3d-4ed6-9b7b-de99f2f9a164"
 }
 ],
+"previews": {
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "usa-work-kit-db",
+      "database_id": "f1bc1f76-ba3d-4ed6-9b7b-de99f2f9a164"
+    }
+  ]
+},
 "triggers": {
 "crons": ["17 * * * *"]
 },

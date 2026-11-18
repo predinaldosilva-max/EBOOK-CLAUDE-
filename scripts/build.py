@@ -10,6 +10,9 @@ PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'device-access.js',
 # USA WORK KIT: recursos locais para teste em celulares, em subdiretório isolado.
 PUBLIC += ('usa-work-kit/assets/icon-180.png', 'usa-work-kit/assets/icon-192.png', 'usa-work-kit/assets/icon-512.png', 'usa-work-kit/assets/icon.svg', 'usa-work-kit/css/style.css', 'usa-work-kit/index.html', 'usa-work-kit/js/app.js', 'usa-work-kit/js/calculators.js', 'usa-work-kit/js/reports.js', 'usa-work-kit/js/storage.js', 'usa-work-kit/js/translations.js', 'usa-work-kit/manifest.webmanifest', 'usa-work-kit/sw.js')
 
+# New local protection assets only; no database, fixture or secret is published.
+PUBLIC += ('usa-work-kit/js/protection-i18n.js', 'usa-work-kit/js/vault.js', 'usa-work-kit/js/protection-ui.js', 'usa-work-kit/js/protection-reports.js', 'usa-work-kit/js/vendor/pdf-lib.min.js', 'usa-work-kit/js/vendor/fontkit.umd.min.js', 'usa-work-kit/js/vendor/fflate.js', 'usa-work-kit/js/vendor/pdf-lib.LICENSE', 'usa-work-kit/js/vendor/fontkit.LICENSE', 'usa-work-kit/js/vendor/fflate.LICENSE', 'usa-work-kit/assets/DejaVuSans.ttf', 'usa-work-kit/assets/DejaVuSans.LICENSE')
+
 class Resources(HTMLParser):
     def __init__(self):
         super().__init__()
