@@ -38,3 +38,50 @@ test('UI: recorded audio survives later attachment selection; active appeal edit
  x.q('[data-record]').checked=true;x.q('#appealReason').value='FICTITIOUS disputed delivery';x.q('#generateAppeal').click();await wait(()=>x.q('#appealText'));clock+=9*60*1000;x.q('#appealText').dispatchEvent(new x.w.Event('input',{bubbles:true}));clock+=2*60*1000;idle();assert.ok(x.q('#appealText'),'active typing must postpone idle lock');clock+=11*60*1000;idle();await wait(()=>x.q('#unlockVault'));assert.equal(x.q('.incident-card'),null);
  }finally{x.w.Protection.leave();x.dom.window.close();}
 });
+
+test('asynchronous recorder stop: Save cannot outrun final audio delivery or discard the recording',async()=>{
+ const x=await opened();try{
+ const tracks=[{stopped:false,stop(){this.stopped=true;}}];let finish;
+ Object.defineProperty(x.w.navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>({getTracks:()=>tracks})}});
+ x.w.MediaRecorder=class {static isTypeSupported(){return true;}constructor(s,o){this.state='inactive';this.mimeType=o.mimeType;}start(){this.state='recording';}stop(){this.state='inactive';finish=()=>{this.ondataavailable({data:new Blob([new Uint8Array([26,69,223,163,0,1])],{type:this.mimeType})});this.onstop();};}};
+ x.q('#addIncident').click();x.q('#incidentDescription').value='FICTITIOUS async audio';x.q('#voice').click();await wait(()=>x.q('#voice').textContent===x.w.I18N.pt.stopVoice);x.q('#voice').click();await wait(()=>finish);x.q('#incidentForm').dispatchEvent(new x.w.Event('submit',{bubbles:true,cancelable:true}));await pause();await pause();assert.ok(x.q('#incidentForm'),'form must remain open until final audio bytes arrive');assert.equal(x.q('[data-edit]'),null);assert.ok(x.w.Protection.hasPending());finish();await wait(()=>x.q('#pendingFiles').textContent.includes('voice-'));assert.equal(tracks[0].stopped,true);x.q('#incidentForm').dispatchEvent(new x.w.Event('submit',{bubbles:true,cancelable:true}));await wait(()=>x.q('[data-file]'));assert.deepEqual(x.errors,[]);
+ }finally{x.w.Protection.leave();x.dom.window.close();}
+});
+test('late microphone permission resolution cannot stop a newer capture or leave tracks running',async()=>{
+ const x=await opened();try{
+ let resolveOld,calls=0;const oldTrack={stopped:false,stop(){this.stopped=true;}},newTrack={stopped:false,stop(){this.stopped=true;}};
+ Object.defineProperty(x.w.navigator,'mediaDevices',{configurable:true,value:{getUserMedia:()=>++calls===1?new Promise(resolve=>{resolveOld=resolve;}):Promise.resolve({getTracks:()=>[newTrack]})}});
+ x.w.MediaRecorder=class {static isTypeSupported(){return true;}constructor(s,o){this.state='inactive';this.mimeType=o.mimeType;}start(){this.state='recording';}stop(){this.state='inactive';this.onstop?.();}};
+ x.q('#addIncident').click();x.q('#voice').click();await wait(()=>resolveOld);assert.ok(x.w.Protection.hasPending(),'pending permission is pending work');x.q('[data-page="home"]').click();await wait(()=>x.q('.protection-hero'));x.q('.protection-hero button').click();await wait(()=>x.q('#unlockVault'));x.q('#vaultKey').value=x.key;x.q('#unlockVault').click();await wait(()=>x.q('#addIncident'));x.q('#addIncident').click();x.q('#voice').click();await wait(()=>x.q('#voice').textContent===x.w.I18N.pt.stopVoice);resolveOld({getTracks:()=>[oldTrack]});await pause();await pause();assert.equal(oldTrack.stopped,true);assert.equal(newTrack.stopped,false,'stale permission must not stop the new recording');x.w.Protection.leave();assert.equal(newTrack.stopped,true);assert.deepEqual(x.errors,[]);
+ }finally{x.w.Protection.leave();x.dom.window.close();}
+});
+
+test('GPS denial and late callback preserve text and never attach location to another incident',async()=>{
+ const x=await opened();try{
+ let success,denied=true;
+ Object.defineProperty(x.w.navigator,'geolocation',{configurable:true,value:{getCurrentPosition(ok,fail){if(denied)fail({code:1});else success=ok;}}});
+ x.q('#addIncident').click();x.q('#incidentDescription').value='FICTITIOUS GPS refusal';x.q('#addGPS').click();await wait(()=>x.q('#vaultStatus').className==='warning');assert.equal(x.q('#incidentDescription').value,'FICTITIOUS GPS refusal');denied=false;x.q('#addGPS').click();await wait(()=>success);x.q('#addIncident').click();x.q('#incidentDescription').value='FICTITIOUS different incident';success({coords:{latitude:25.7617,longitude:-80.1918,accuracy:10},timestamp:Date.now()});await pause();await pause();assert.equal(x.q('#gpsStatus').textContent,'');x.q('#incidentForm').dispatchEvent(new x.w.Event('submit',{bubbles:true,cancelable:true}));await wait(()=>x.q('[data-edit]'));assert.ok(!x.q('.revision').textContent.includes('25.7617'));assert.deepEqual(x.errors,[]);
+ }finally{x.w.Protection.leave();x.dom.window.close();}
+});
+test('vault downloads attach a named anchor and retain a manual save link after asynchronous preparation',async()=>{
+ const x=await opened();try{
+ let connected,name,href;x.w.HTMLAnchorElement.prototype.click=function(){connected=this.isConnected;name=this.download;href=this.href;};x.q('#backupVault').click();await wait(()=>name);assert.equal(connected,true);assert.ok(name.endsWith('.uwkv'));const link=x.q('#vaultStatus a[download]');assert.ok(link,'manual save link remains available');assert.equal(link.href,href);assert.equal(link.download,name);assert.equal(await x.downloads[0].text().then(s=>JSON.parse(s).format),'UWKV1');assert.deepEqual(x.errors,[]);
+ }finally{x.w.Protection.leave();x.dom.window.close();}
+});
+
+test('Safari-compatible MP4/AAC and Android-compatible WebM/Opus originals survive save and download byte-for-byte',async()=>{
+ const fixtures=JSON.parse(readFileSync(new URL('fixtures-media.json',import.meta.url),'utf8'));
+ for(const [label,type,ext]of [['iPhone','audio/mp4','m4a'],['Android','audio/webm','webm']]){
+  const x=await opened(label);try{const bytes=Buffer.from(fixtures[ext],'base64');const track={stop(){}};Object.defineProperty(x.w.navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>({getTracks:()=>[track]})}});
+   x.w.MediaRecorder=class {static isTypeSupported(t){return t===type;}constructor(s,o){assert.equal(o.mimeType,type);this.mimeType=type;this.state='inactive';}start(){this.state='recording';}stop(){this.state='inactive';this.ondataavailable({data:new Blob([bytes],{type})});this.onstop();}};
+   x.q('#addIncident').click();x.q('#incidentDescription').value='FICTITIOUS silence fixture';x.q('#voice').click();await wait(()=>x.q('#voice').textContent===x.w.I18N.pt.stopVoice);x.q('#voice').click();await wait(()=>x.q('#pendingFiles').textContent.includes('.'+ext));x.q('#incidentForm').dispatchEvent(new x.w.Event('submit',{bubbles:true,cancelable:true}));await wait(()=>x.q('[data-file]'));x.q('[data-file]').click();await wait(()=>x.downloads.length===1);assert.deepEqual(Buffer.from(await x.downloads[0].arrayBuffer()),bytes);assert.deepEqual(x.errors,[]);
+  }finally{x.w.Protection.leave();x.dom.window.close();}
+ }
+});
+
+test('microphone permission denial releases pending state and keeps manual evidence entry usable',async()=>{
+ const x=await opened();try{
+ Object.defineProperty(x.w.navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>{throw new Error('NotAllowedError');}}});x.w.MediaRecorder=class {};
+ x.q('#addIncident').click();x.q('#incidentDescription').value='FICTITIOUS permission denied';x.q('#voice').click();await wait(()=>x.q('#vaultStatus').className==='warning');assert.equal(x.w.Protection.hasPending(),false);assert.equal(x.q('#incidentDescription').value,'FICTITIOUS permission denied');attach(x,[png()]);x.q('#incidentForm').dispatchEvent(new x.w.Event('submit',{bubbles:true,cancelable:true}));await wait(()=>x.q('[data-file]'));assert.deepEqual(x.errors,[]);
+ }finally{x.w.Protection.leave();x.dom.window.close();}
+});
