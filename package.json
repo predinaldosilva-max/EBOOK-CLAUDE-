@@ -2,7 +2,7 @@
   "name": "usa-work-kit-activation",
   "private": true,
   "scripts": {
-    "test": "node --test tests/*.test.mjs && node usa-work-kit/tests/test.js && node usa-work-kit/tests/quality.js && node usa-work-kit/tests/device.js",
+    "test": "node --test tests/*.test.mjs && node usa-work-kit/tests/test.js && node usa-work-kit/tests/quality.js && node usa-work-kit/tests/device.js && node tests/finance-integration.cjs",
     "dev": "node scripts/preview.mjs",
     "deploy": "wrangler deploy",
     "seed:preview": "wrangler d1 execute usa-work-kit-local-fixtures --local --config wrangler.preview.jsonc --file schema.sql && wrangler d1 execute usa-work-kit-local-fixtures --local --config wrangler.preview.jsonc --file tests/fixtures-preview.sql"
