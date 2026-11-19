@@ -1,0 +1,5 @@
+# v2.0.4 — chave de cofre perdida
+
+A tela bloqueada oferece Perdi minha chave — criar novo cofre. Explica perda definitiva do conteúdo local, preservação dos arquivos já baixados fora do cofre e necessidade da chave antiga para backups antigos. Exige confirmação explícita antes de remover somente o cofre da licença atual; depois apresenta Criar cofre local, que gera outra chave e exige guardá-la. Não recupera dados antigos nem converte PDF/ZIP em backup completo.
+
+Teste de regressão executado: cancelar preserva o cofre; confirmar remove somente o cofre atual; outra licença, armazenamento de acesso e arquivos exportados permanecem; novo cofre recebe outra chave e aceita nova ocorrência. Suíte completa: 50 casos Node, 41 básicos, 26 verificações de qualidade com 5.000 cenários matemáticos, 11 verificações de dispositivo, 300 assertions financeiras e quatro testes Python do build. Sem mudança de autenticação, banco, configurações ou formato UWKV1. Rollback: 8753457772592e7749763b0be9c3d02af78df0af. Validação de interface simulada; não apaga nenhum cofre de produção durante os testes.
