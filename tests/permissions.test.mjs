@@ -1,0 +1,36 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {JSDOM,VirtualConsole} from 'jsdom';
+import {readFileSync} from 'node:fs';
+import {webcrypto} from 'node:crypto';
+import {IDBFactory} from 'fake-indexeddb';
+const root=new URL('../usa-work-kit/',import.meta.url),pause=()=>new Promise(r=>setTimeout(r,10));
+async function wait(fn){for(let i=0;i<150;i++){if(fn())return;await pause();}throw Error('UI timed out');}
+async function setup(label,configure=()=>{}){const errors=[],downloads=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));const dom=new JSDOM(readFileSync(new URL('index.html',root),'utf8'),{url:'https://test.example/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window;Object.defineProperty(w.navigator,'userAgent',{value:label==='iPhone'?'Mozilla/5.0 (iPhone) Mobile Safari':'Mozilla/5.0 (Linux; Android 14) Mobile Chrome'});Object.defineProperty(w,'crypto',{value:webcrypto});Object.defineProperty(w,'indexedDB',{value:new IDBFactory()});Object.assign(w,{TextEncoder,TextDecoder,Blob,File,structuredClone,AbortController,confirm:()=>true,scrollTo:()=>{}});w.URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){};w.localStorage.setItem('usa-work-kit-installation-v1','a'.repeat(43));w.localStorage.setItem('usa-work-kit-server-access-v1',JSON.stringify({license:'002',generation:0}));w.fetch=async(url)=>{assert.equal(url,'/api/validate');return {ok:true,json:async()=>({ok:true})};};configure(w);for(const f of ['translations','calculators','storage','reports','protection-i18n','vault','protection-reports','protection-ui','app'])w.eval(readFileSync(new URL('js/'+f+'.js',root),'utf8'));await wait(()=>w.document.querySelector('.protection-hero'));return {w,dom,errors,downloads};}
+
+for(const label of ['iPhone','Android'])test(label+' permission onboarding is optional, never prompts automatically, and can reopen from More',async()=>{
+ let calls=0;const {w,dom,errors}=await setup(label,w=>{Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>{calls++;return {getTracks:()=>[]};}}});Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition(){calls++;}}});w.MediaRecorder=class {};});
+ try{const q=s=>w.document.querySelector(s);assert.ok(q('#permissionSetup[open]'));assert.equal(calls,0);const grant=w.localStorage.getItem('usa-work-kit-server-access-v1');q('#permissionLater').click();assert.equal(q('#permissionSetup'),null);assert.equal(w.localStorage.getItem('usa-work-kit-permission-setup-v1'),'seen');assert.equal(w.localStorage.getItem('usa-work-kit-server-access-v1'),grant);q('[data-page="more"]').click();assert.ok(q('#permissionSettings'));q('#permissionSettings').click();assert.ok(q('#permissionSetup'));assert.equal(calls,0);q('#permissionContinue').click();assert.equal(q('#permissionSetup'),null);assert.deepEqual(errors,[]);
+ }finally{w.Protection.leave();dom.window.close();}
+});
+test('explicit microphone/GPS permission probes stop audio tracks and store no sensor data',async()=>{
+ let mic=0,gps=0,stops=0;const {w,dom,errors}=await setup('iPhone',w=>{Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async options=>{assert.equal(options.audio,true);mic++;return {getTracks:()=>[{stop(){stops++;}}]};}}});Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition(ok){gps++;ok({coords:{latitude:25.7617,longitude:-80.1918},timestamp:Date.now()});}}});w.MediaRecorder=class {};});
+ try{const q=s=>w.document.querySelector(s);q('#permissionMic').click();await wait(()=>q('#permissionMicStatus').textContent===w.I18N.pt.permissionAllowed);assert.equal(mic,1);assert.equal(stops,1);assert.equal(gps,0);q('#permissionGPS').click();await wait(()=>q('#permissionGPSStatus').textContent===w.I18N.pt.permissionAllowed);assert.equal(gps,1);assert.ok(!JSON.stringify({...w.localStorage}).includes('25.7617'));q('#permissionContinue').click();assert.equal(q('#permissionSetup'),null);assert.deepEqual(errors,[]);
+ }finally{w.Protection.leave();dom.window.close();}
+});
+test('permission refusal, unavailable APIs and GPS timeout never prevent access',async()=>{
+ const {w,dom,errors}=await setup('Android',w=>{Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>{const e=new Error('refused');e.name='NotAllowedError';throw e;}}});Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition(ok,fail){fail({code:3});}}});w.MediaRecorder=class {};});
+ try{const q=s=>w.document.querySelector(s);q('#permissionMic').click();await wait(()=>q('#permissionMicStatus').textContent===w.I18N.pt.permissionDenied);q('#permissionGPS').click();await wait(()=>q('#permissionGPSStatus').textContent===w.I18N.pt.permissionUnavailable);assert.ok(q('.protection-hero'));q('#permissionLater').click();q('[data-page="more"]').click();q('#permissionSettings').click();delete w.MediaRecorder;q('#permissionMic').click();await wait(()=>q('#permissionMicStatus').textContent===w.I18N.pt.permissionUnsupported);q('#permissionContinue').click();assert.equal(q('#permissionSetup'),null);assert.deepEqual(errors,[]);
+ }finally{w.Protection.leave();dom.window.close();}
+});
+test('leaving setup while permission is pending stops late microphone tracks without reopening',async()=>{
+ let resolve,stops=0;const {w,dom,errors}=await setup('iPhone',w=>{Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:()=>new Promise(r=>{resolve=r;})}});w.MediaRecorder=class {};});
+ try{const q=s=>w.document.querySelector(s);q('#permissionMic').click();assert.ok(q('#permissionGPS').disabled);q('#permissionLater').click();resolve({getTracks:()=>[{stop(){stops++;}}]});await wait(()=>stops===1);assert.equal(q('#permissionSetup'),null);assert.ok(q('.protection-hero'));assert.deepEqual(errors,[]);
+ }finally{w.Protection.leave();dom.window.close();}
+});
+test('onboarding language selection translates all controls without requesting permissions',async()=>{
+ const {w,dom,errors}=await setup('Android');try{const q=s=>w.document.querySelector(s);for(const l of ['es','en','pt']){q('#permissionLang').value=l;q('#permissionLang').dispatchEvent(new w.Event('change'));assert.equal(q('#permissionTitle').textContent,w.I18N[l].permissionTitle);assert.equal(q('#permissionMic').textContent,w.I18N[l].permissionMic);assert.equal(q('#permissionGPS').textContent,w.I18N[l].permissionGPS);}q('#permissionLater').click();assert.deepEqual(errors,[]);}finally{w.Protection.leave();dom.window.close();}
+});
+test('seen setup remains dismissed on subsequent validated loads, while controls remain available',async()=>{
+ const {w,dom}=await setup('iPhone',w=>w.localStorage.setItem('usa-work-kit-permission-setup-v1','seen'));try{assert.equal(w.document.querySelector('#permissionSetup'),null);w.document.querySelector('[data-page="more"]').click();assert.ok(w.document.querySelector('#permissionSettings'));}finally{w.Protection.leave();dom.window.close();}
+});
