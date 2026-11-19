@@ -1,5 +1,5 @@
 /* Same-origin static assets only. No analytics, APIs or record uploads. */
-const CACHE='usa-work-kit-v2.0.4';
+const CACHE='usa-work-kit-v2.0.5';
 const FILES=['./','./index.html','./css/style.css','./js/app.js','./js/protection-i18n.js','./js/vault.js','./js/protection-ui.js','./js/protection-reports.js','./js/vendor/pdf-lib.min.js','./js/vendor/fontkit.umd.min.js','./js/vendor/fflate.js','./assets/DejaVuSans.ttf','./js/calculators.js','./js/storage.js','./js/reports.js','./js/translations.js','./assets/icon.svg','./assets/icon-180.png','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES.map(file=>new Request(file,{cache:'reload'})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('usa-work-kit-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
