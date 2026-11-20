@@ -2,7 +2,7 @@
 const a=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const M=require('../js/earnings');const C=require('../js/calculators'),S=require('../js/storage');let cases=0;const test=(name,f)=>{f();cases++;console.log('PASS '+name);};
 for(const v of [' ',[],{},'0x10','1,000','1e3','-0','++2'])test('Reject malformed numeric '+JSON.stringify(v),()=>a.throws(()=>C.number(v)));
-let seed=1987;const rand=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};const close=(x,y)=>a.ok(Math.abs(x-y)<=1e-7*Math.max(1,Math.abs(y)),`${x} != ${y}`);
+let seed=Number(process.env.QA_SEED||1987);const rand=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};const close=(x,y)=>a.ok(Math.abs(x-y)<=1e-7*Math.max(1,Math.abs(y)),`${x} != ${y}`);
 let scenarios=0;
 test('5000 independently calculated delivery / work / goal / actual earnings scenarios',()=>{for(let i=0;i<1250;i++){
  let offer=Math.round(rand()*20000)/100,tip=Math.round(rand()*5000)/100,miles=rand()*200,cost=rand()*2,minutes=1+rand()*180,wait=rand()*50;
