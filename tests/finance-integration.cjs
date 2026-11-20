@@ -19,7 +19,7 @@ async function main(){
  w.HTMLAnchorElement.prototype.click=function(){downloads.push({name:this.download,blob:blobmap.get(this.href)});};
  Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async value=>{clipboard=value;}}});
  w.fetch=async(url,opt)=>{const response=await mf.dispatchFetch(new URL(url,base).href,{...opt,headers:{...opt.headers,Origin:base,'CF-Connecting-IP':label}});api.push({path:url,status:response.status});return response;};
- for(const file of ['translations','calculators','storage','reports','protection-i18n','vault','protection-reports','protection-ui','app'])w.eval(fs.readFileSync(root+'/js/'+file+'.js','utf8'));
+ for(const file of ['translations','calculators','storage','reports','protection-i18n','protection-daily-i18n','protection-preventive','vault','protection-reports','protection-daily-ui','protection-ui','app'])w.eval(fs.readFileSync(root+'/js/'+file+'.js','utf8'));
  const $=s=>w.document.querySelector(s),click=s=>{const el=$(s);assert.ok(el,'Missing '+s);el.click();},fill=values=>{for(const[k,v]of Object.entries(values)){const e=$('#'+k);assert.ok(e,'Missing field '+k);e.value=String(v);e.dispatchEvent(new w.Event('input',{bubbles:true}));e.dispatchEvent(new w.Event('change',{bubbles:true}));}},nav=name=>{if(!$('[data-page="'+name+'"]'))click('[data-page="more"]');click('[data-page="'+name+'"]');},state=()=>JSON.parse(w.localStorage.getItem('usa-work-kit-finance-v2:002')),test=(n,a,e)=>check(label+': '+n,a,e),txt=s=>$(s)?.textContent.replace(/\u00a0/g,' ')||'',has=(s,value)=>test(s+' contains '+value,txt(s).includes(value),true);
  const login=async password=>{fill({accessPassword:password});$('#accessForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));for(let i=0;i<200&&!$('.shell')&&$('#accessForm button')?.disabled;i++)await new Promise(r=>setTimeout(r,5));};
  await login('001');has('#accessError','Senha inválida');await login('UW-0123456789ABCDEF');console.log('LOGIN_DIAGNOSTIC',txt('#accessError'),JSON.stringify(api));test('real worker/D1 login',!!$('.shell'),true);$('#permissionLater')?.click();
@@ -57,7 +57,7 @@ async function main(){
  const reloaded=new JSDOM(fs.readFileSync(root+'/index.html','utf8'),{url:base,runScripts:'outside-only',virtualConsole:reloadConsole});const r=reloaded.window;
  Object.defineProperty(r.navigator,'userAgent',{value:w.navigator.userAgent});Object.defineProperty(r,'crypto',{value:webcrypto});Object.assign(r,{TextEncoder,TextDecoder,AbortController,Blob,scrollTo:()=>{},confirm:()=>true,setInterval:()=>0,setTimeout:()=>0,clearTimeout:()=>{},fetch:w.fetch});
  for(let i=0;i<w.localStorage.length;i++){const key=w.localStorage.key(i);r.localStorage.setItem(key,w.localStorage.getItem(key));}
- for(const file of ['translations','calculators','storage','reports','protection-i18n','vault','protection-reports','protection-ui','app'])r.eval(fs.readFileSync(root+'/js/'+file+'.js','utf8'));
+ for(const file of ['translations','calculators','storage','reports','protection-i18n','protection-daily-i18n','protection-preventive','vault','protection-reports','protection-daily-ui','protection-ui','app'])r.eval(fs.readFileSync(root+'/js/'+file+'.js','utf8'));
  for(let i=0;i<100&&!r.document.querySelector('.shell');i++)await new Promise(resolve=>setTimeout(resolve,5));
  test('fresh load validates remembered server grant',!!r.document.querySelector('.shell'),true);
  test('fresh load restores income records',JSON.parse(r.localStorage.getItem('usa-work-kit-finance-v2:002')).incomes.length,3);
