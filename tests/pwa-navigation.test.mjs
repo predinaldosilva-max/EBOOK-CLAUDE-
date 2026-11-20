@@ -34,5 +34,5 @@ for(let round=1;round<=3;round++)test(`PWA navigation round ${round}: index redi
  assert.equal(await h.request('/api/validate'),undefined);assert.equal(await h.request('https://other.test/'),undefined);assert.equal(await h.request('./','navigate','POST'),undefined);
 });
 test('PWA manifest launches the canonical directory without an HTML redirect',()=>{
- const manifest=JSON.parse(fs.readFileSync('usa-work-kit/manifest.webmanifest'));assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.display,'standalone');
+ const manifest=JSON.parse(fs.readFileSync('usa-work-kit/manifest.webmanifest'));assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');assert.equal(manifest.id,'./index.html');assert.equal(manifest.display,'standalone');
 });

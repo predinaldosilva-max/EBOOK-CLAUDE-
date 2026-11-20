@@ -1,6 +1,7 @@
 {
   "name": "USA WORK KIT",
   "short_name": "Work Kit",
+  "id": "./index.html",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
