@@ -31,3 +31,5 @@
 @media(min-width:900px){.appeal-translation{max-width:100%}}
 
 .brand small{color:var(--brand-gold)}.brand img{filter:drop-shadow(0 2px 5px var(--navy))}
+
+#backupGuide input[type=checkbox]{width:22px;height:22px;min-height:22px;padding:0;vertical-align:middle;accent-color:var(--green)}
