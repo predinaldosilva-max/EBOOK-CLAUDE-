@@ -1,0 +1,83 @@
+{
+  "data": {
+    "platform": "Instacart",
+    "state": "NY",
+    "city": "New York",
+    "date": "2026-11-20",
+    "start": "",
+    "end": "",
+    "timeZone": "America/New_York",
+    "purpose": "Fictitious fixture",
+    "notes": "",
+    "corrective": "",
+    "notification": "",
+    "answers": {
+      "automation": "yes",
+      "autoAccept": "yes",
+      "toolCredentials": "no",
+      "privateAccess": "no",
+      "knowsPermissions": "yes",
+      "sharedCredentials": "no",
+      "thirdPartyDevice": "no",
+      "suspiciousAuth": "no",
+      "unknownActivity": "no",
+      "multipleAccountsNotice": "no",
+      "complaint": "no",
+      "cancellation": "no",
+      "warning": "no",
+      "identityCheck": "no",
+      "securityNotice": "no",
+      "incident": "no"
+    }
+  },
+  "result": {
+    "version": "daily-2026-11-20-v1",
+    "weights": {
+      "automation": 5,
+      "autoAccept": 45,
+      "toolCredentials": 35,
+      "privateAccess": 20,
+      "knowsPermissions": 10,
+      "sharedCredentials": 40,
+      "thirdPartyDevice": 10,
+      "suspiciousAuth": 10,
+      "unknownActivity": 30,
+      "multipleAccountsNotice": 20,
+      "complaint": 5,
+      "cancellation": 5,
+      "warning": 20,
+      "identityCheck": 0,
+      "securityNotice": 10,
+      "incident": 5
+    },
+    "complete": true,
+    "score": 50,
+    "band": "critical",
+    "missing": [],
+    "unknown": [],
+    "factors": [
+      {
+        "id": "automation",
+        "weight": 5,
+        "critical": false
+      },
+      {
+        "id": "autoAccept",
+        "weight": 45,
+        "critical": true
+      }
+    ],
+    "critical": true,
+    "recommendations": [
+      {
+        "factor": "automation",
+        "text": "Check whether the tool complies with your platform rules; stop incompatible uses."
+      },
+      {
+        "factor": "autoAccept",
+        "text": "Stop unauthorized automatic offer selection or acceptance and consult official rules."
+      }
+    ],
+    "source": "user-reported; heuristic, not a probability"
+  }
+}
