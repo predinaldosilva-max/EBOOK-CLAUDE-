@@ -20,6 +20,10 @@ Executado `npm test` três vezes com QA_SEED=1, 2 e 3: todas concluíram com có
 
 A execução em navegadores reais é automatizada no GitHub Actions, com três rodadas em Chromium desktop, Chromium móvel e WebKit móvel (nove jornadas). Inclui criação de cofre, diagnóstico, histórico, evidências, PDF/ZIP/backup, reabertura, direitos, idiomas, largura 320px, cores da tela inicial e mapa fora do cofre com CSV e restauração financeira.
 
+Resultado em navegadores: nove jornadas aprovadas, três por motor/perfil, sem erros JavaScript não tratados. Capturas e exportações fictícias constam no artefato 14632537165.
+
+Publicação autorizada pelo proprietário, PR #11 mesclado em main no commit b421095efe26c4893f3a0825f7bd843cacb08677.
+
 Resultados e evidências: https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/actions/runs/44745104962
 
 ## O que requer telefone físico
