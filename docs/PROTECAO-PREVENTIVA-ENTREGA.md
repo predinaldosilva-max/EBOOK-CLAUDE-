@@ -76,7 +76,7 @@ Localmente: npm test passou com 68 testes Node (incluindo 14 novos testes), 41 t
 
 As 14 novas verificações abrangem: vazios/Não sei/condicionais, todos os limites de classificação, fator grave com peso zero, pesos inválidos, 5.000 combinações independentes, datas/fusos, revisões, backup antigo, recuperação com original e hash, PDF e ZIP, exclusão de dados não selecionados, licença errada, adulteração, falha de armazenamento e repetição, conflito entre abas, catálogo geográfico, extração de notificação, gráficos e fluxo JSDOM completo de iPhone/Android/desktop. JSDOM é simulação, não Safari físico.
 
-O Chromium local não iniciou: socket() Operation not permitted. Teste nativo separado preparado para GitHub Actions (Chromium desktop/mobile e WebKit mobile), com API fictícia apenas no teste de interface e arquivos fictícios, sem credenciais reais. Resultados CI devem ser consultados antes de afirmar aprovação desses navegadores.
+O Chromium local não iniciou: socket() Operation not permitted. Teste nativo separado preparado para GitHub Actions (Chromium desktop/mobile e WebKit mobile), com API fictícia apenas no teste de interface e arquivos fictícios, sem credenciais reais. A execução GitHub Actions 44665414428 aprovou os três fluxos nativos: Chromium desktop, Chromium móvel e WebKit móvel. A API de validação é uma fixture local nesse teste de interface; a autenticação real com Worker/D1 local foi validada separadamente na suíte integrada. Não equivale a Safari em iPhone físico.
 
 Aceite manual obrigatório da nova versão no iPhone/Android: entrar com licença de teste; criar/cofre ou abrir backup de teste da mesma licença; concluir diagnóstico; confirmar salvamento; fechar e reabrir; corrigir e verificar ambas revisões; salvar incidente com foto/áudio/vídeo dentro dos limites; baixar original; gerar PDF/ZIP com diário selecionado; abrir cada download; exportar UWKV1 e restaurar com chave correta; conferir conteúdo e anexos; testar permissões concedidas/negadas. Não limpar dados legítimos para testar. Conferir interface em 320 px e desktop. O tempo aproximado de um minuto é objetivo de UX, não medição de usabilidade concluída.
 
@@ -85,3 +85,25 @@ Aceite manual obrigatório da nova versão no iPhone/Android: entrar com licenç
 Sem novos serviços, APIs externas, armazenamento pago ou mudanças Cloudflare. Playwright é dependência de desenvolvimento para testes, não é enviado ao usuário. GitHub Actions usa runner público padrão sem serviços adicionais. Dados novos permanecem no aparelho, não consomem D1/R2. O uso de Worker/D1 de licenciamento continua sujeito aos limites já existentes; não existe promessa de capacidade ilimitada.
 
 Manter produção anterior até conferir o build de prévia e concluir aceite físico. Para rollback, usar commit base/branch de recuperação sem apagar IndexedDB/localStorage ou restaurar D1. Exportar cofre antes de alternar versões; guardar a cópia externa e chave. A UI antiga não oferece diagnóstico; não editar cofre novo numa versão antiga durante recuperação. Confirmar cada implantação por status de build e arquivos servidos, não só por merge no GitHub.
+
+
+### Roteiro de aceite do índice
+
+Na própria prévia, use o código completo da licença de teste 001 e somente dados fictícios. Essa licença possui cofre de teste separado por instalação; um backup feito noutra instalação de teste não deve ser usado para simular recuperação de cliente.
+
+1. Preencha cidade/estado e todas as perguntas visíveis com Não. Resultado esperado: 0/100, baixa exposição, sem garantia de segurança.
+2. No mesmo relatório, altere automação para Sim, informe finalidade fictícia, responda aceitação automática Sim, solicitação de credenciais Não, acesso privado Não e conhecimento das permissões Sim. Mantenha as outras respostas Não. Esperado: 50/100 e classificação crítica pelo fator grave, mesmo abaixo de 60.
+3. Aguarde a mensagem de salvamento, consulte o histórico e confirme as duas versões. Feche/reabra o cofre com a chave correta e confira novamente. Não confundir essa chave com a licença de acesso.
+4. Em Minha Defesa, selecione esse relatório e uma ocorrência fictícia com anexo. Gere PDF/ZIP e confira somente os itens selecionados. Exporte backup UWKV1, mantenha a chave original separada e teste a restauração na mesma instalação de teste. Não excluir registros reais para testar.
+
+
+## 8. Evidências finais
+
+Código funcional aprovado: b523c38b494a21af6fccbb4dd20299a53ccb7365.
+
+- CI local + nativo, ambos aprovados: https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/actions/runs/44665414428
+- Artefato com três capturas e PDFs/ZIPs/backups fictícios: https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/actions/runs/44665414428/artifacts/14597667476
+- Revisão da implementação: https://github.com/predinaldosilva-max/EBOOK-CLAUDE-/pull/10
+- Prévia verificada no navegador, tela de acesso v2.1.0: https://usa-work-kit-2-protecao-local-usa-work-kit.pr-edinaldosilva.workers.dev/
+
+Não houve merge na main; a versão oficial foi preservada. A prévia exige licença válida; usar código completo de teste 001, não os dígitos 001 isolados. Não disponibilizamos credenciais neste relatório. Os arquivos do primeiro teste nativo também foram inspecionados com pdfinfo/pdftotext; o ZIP continha o original cujo hash SHA-256 foi reconferido, e UWKV1 não continha texto dos registros em claro. Apenas dados fictícios foram usados.
