@@ -1,5 +1,5 @@
 /* Same-origin static assets only. No analytics, APIs or record uploads. */
-const CACHE='usa-work-kit-v2.2.5-r1';
+const CACHE='usa-work-kit-v2.2.5-r2';
 const FILES=['./','./index.html','./css/style.css','./js/app.js','./js/protection-i18n.js','./js/protection-daily-i18n.js','./js/protection-preventive.js','./js/protection-daily-ui.js','./js/earnings.js','./js/earnings-ui.js','./js/v22-i18n.js','./css/tokens.css','./assets/brand-original.jpeg','./js/vault.js','./js/protection-ui.js','./js/protection-reports.js','./js/vendor/pdf-lib.min.js','./js/vendor/fontkit.umd.min.js','./js/vendor/fflate.js','./assets/DejaVuSans.ttf','./js/calculators.js','./js/storage.js','./js/reports.js','./js/translations.js','./assets/icon.svg','./assets/icon-180.png','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
 // A cached /index.html may have followed the host's redirect to /. Safari
 // refuses that Response for a navigation whose redirect mode is manual.
@@ -12,11 +12,16 @@ function navigationResponse(response){
 }
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
-  await cache.addAll(FILES.map(file=>new Request(file,{cache:'reload'})));
-  for(const file of ['./','./index.html']){
-   const response=await cache.match(file);
-   if(response&&response.redirected)await cache.put(file,navigationResponse(response));
-  }
+  // Use release-specific network URLs, then store under stable asset URLs.
+  // cache:'reload' alone cannot bypass an older worker's Cache API response.
+  // Do not activate until every required asset has been fetched successfully.
+  await Promise.all(FILES.map(async file=>{
+   const url=new URL(file,self.registration.scope);
+   url.searchParams.set('__uwk_release',CACHE);
+   const response=await fetch(new Request(url,{cache:'reload',redirect:'follow'}));
+   if(!response.ok)throw Error('Static asset unavailable');
+   await cache.put(file,(file==='./'||file==='./index.html')?navigationResponse(response):response);
+  }));
  }).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',event=>{

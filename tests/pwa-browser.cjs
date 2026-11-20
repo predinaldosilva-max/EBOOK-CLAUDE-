@@ -30,7 +30,7 @@ const root=path.resolve('usa-work-kit'),out=path.resolve('qa-output/pwa-browser'
    // Same origin, query misses the old cached redirect; does not clear storage.
    await page.goto(origin+'/?pwa-recovery=2.2.5');await page.locator('.protection-hero').waitFor();
    await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();});
-   await page.waitForFunction(async()=>{const names=await caches.keys();const registration=await navigator.serviceWorker.getRegistration();return names.includes('usa-work-kit-v2.2.5-r1')&&!names.includes('usa-work-kit-v2.2.4-r1')&&registration?.active?.state==='activated'&&navigator.serviceWorker.controller===registration.active;});
+   await page.waitForFunction(async()=>{const names=await caches.keys();const registration=await navigator.serviceWorker.getRegistration();return names.includes('usa-work-kit-v2.2.5-r2')&&!names.includes('usa-work-kit-v2.2.4-r1')&&registration?.active?.state==='activated'&&navigator.serviceWorker.controller===registration.active;});
    await page.close();page=await context.newPage();await page.goto(origin+'/');await page.locator('.protection-hero').waitFor();const versions={app:await page.locator('.sidefoot').textContent(),footer:await page.locator('.bottom').textContent()};console.log('VERSION '+label+' '+JSON.stringify(versions));assert.match(versions.app,/v2\.2\.5/);assert.match(versions.footer,/v2\.2\.5/);
    const fixed=await page.evaluate(async()=>{const r=await caches.match('./index.html');return {redirected:r.redirected,status:r.status};});assert.equal(fixed.redirected,false);assert.equal(fixed.status,200);
    for(const url of ['/index.html','/','/?reopen=1']){

@@ -12,11 +12,12 @@ O novo teste `tests/pwa-navigation.test.mjs` falhou três vezes contra o código
 - Cópia das respostas de navegação bem-sucedidas do mesmo domínio remove o histórico de redirecionamentos, preservando conteúdo e cabeçalhos. Respostas redirecionadas para outro domínio não são convertidas em conteúdo confiável.
 - Normalização das duas entradas HTML durante a instalação do cache. URLs antigas `/index.html` continuam atendidas.
 - Consultas usam somente o cache estático da versão atual.
+- A instalação busca cada arquivo em URL com identificador público da versão e o guarda na URL estável. A jornada Chromium detectou execução de JS 2.2.4 mesmo com o novo cache ativo; a busca identificada evita reutilizar a resposta antiga. Uma falha de download impede ativar uma versão incompleta e preserva o cache anterior.
 - Nenhuma alteração em IndexedDB, localStorage, criptografia, chaves, donos de registros, acesso, licenciamento, backend ou D1. A limpeza de caches atinge apenas caches de arquivos estáticos anteriores, como já ocorria.
 
 ## Validação
 
-Três execuções locais completas de `npm test`: cada uma com 135 testes principais aprovados, 39 testes base de cálculo, 26 grupos de qualidade e integração financeira. Quatro testes de build Python aprovados. O fluxo de CI repete essas verificações e executa os testes nativos antes da publicação.
+Três execuções locais completas de `npm test`: cada uma com 136 testes principais aprovados, 39 testes base de cálculo, 26 grupos de qualidade e integração financeira. Quatro testes de build Python aprovados. O fluxo de CI repete essas verificações e executa os testes nativos antes da publicação.
 
 `tests/pwa-browser.cjs` acrescenta três rodadas por motor (WebKit/Chromium): host com redirecionamento real, cache antigo, tentativa de reabertura, atualização sem limpar dados, reabertura em três URLs, mesma chave e ocorrência fictícia, HTML com servidor indisponível e isolamento entre contextos. `tests/vault-browser-upgrade.cjs` mantém 12 jornadas de atualização desde 2.2.2. Artefatos e resultados finais ficam no workflow da revisão #15. Nenhum teste usa a chave secreta ou os documentos do usuário.
 
