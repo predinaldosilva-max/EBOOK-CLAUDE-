@@ -24,6 +24,9 @@ const root=path.resolve('usa-work-kit'),out=path.resolve('qa-output/pwa-browser'
    await page.close();page=await context.newPage();let legacyError='';try{await page.goto(origin+'/index.html',{timeout:15000});}catch(e){legacyError=e.message.split('\n')[0];}
    console.log('BASELINE '+label+' '+round+': redirected cached start URL; '+(legacyError||'engine accepted legacy navigation'));
    old=false;
+   // Close the failed document: Chromium may still be committing its internal
+   // error page when goto rejects. Keep the same storage context for recovery.
+   await page.close();page=await context.newPage();
    // Same origin, query misses the old cached redirect; does not clear storage.
    await page.goto(origin+'/?pwa-recovery=2.2.5');await page.locator('.protection-hero').waitFor();
    await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();});
