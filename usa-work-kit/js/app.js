@@ -106,7 +106,7 @@ function dismissLegacyNotice(){try{localStorage.setItem(LEGACY_NOTICE_KEY,'yes')
 function legacyNotice(){try{return !legacyNoticeDismissed()&&Store.legacy()?`<section class="warning"><p>${esc(t('migration'))}</p><button class="btn" data-page="more">${esc(t('previewLegacy'))}</button><button type="button" class="btn" id="dismissLegacyNotice">${esc(t('dismissLegacyNotice'))}</button></section>`:'';}catch{return '';}}
 function renderEarnings(){mountVault('earnings');}
 function renderProtection(){mountVault('protection');}
-function mountVault(mode){Protection.mount($('#content'),{owner,lang:state.lang,mode,legacyCost:state.drafts.delivery?.cost,financialBackup:()=>Store.validate(state),restoreFinancial:data=>{const next=Store.validate(data);if(!Store.save(next))throw Error('storageError');state=next;blocked=false;}}).catch(e=>{$('#content').textContent=t(e.message)||t('storageError');});}
+function mountVault(mode){Protection.mount($('#content'),{owner,lang:state.lang,mode,legacyCost:state.drafts.delivery?.cost,financialBackup:()=>Store.validate(state),syncVehicle:s=>{const next=JSON.parse(JSON.stringify(state));next.drafts.delivery={...(next.drafts.delivery||{}),cost:String(Number(Earnings.costPerMile(s).toFixed(6))),minimum:String(s.minHourly)};if(!Store.save(next))throw Error('storageError');state=next;},restoreFinancial:data=>{const next=Store.validate(data);if(!Store.save(next))throw Error('storageError');state=next;blocked=false;}}).catch(e=>{$('#content').textContent=t(e.message)||t('storageError');});}
 const PERMISSION_SETUP_KEY='usa-work-kit-permission-setup-v1';
 function showPermissionSetup(force=false){
  if(document.getElementById('permissionSetup'))return;
