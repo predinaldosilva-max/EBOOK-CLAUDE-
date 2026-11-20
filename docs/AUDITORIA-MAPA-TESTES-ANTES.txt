@@ -1,0 +1,52 @@
+✔ Android audit math, saved settings, local counts and exports round 1 (204.9672ms)
+✔ Android audit math, saved settings, local counts and exports round 2 (125.161399ms)
+✔ Android audit math, saved settings, local counts and exports round 3 (115.384215ms)
+✔ iPhone audit math, saved settings, local counts and exports round 1 (110.459769ms)
+✔ iPhone audit math, saved settings, local counts and exports round 2 (117.541005ms)
+✔ iPhone audit math, saved settings, local counts and exports round 3 (112.767988ms)
+✖ confirmed settings must immediately refresh an already visible offer (49.504591ms)
+✖ editing preview must use the same historical costs as the saved edit (59.696654ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 6
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1293.043573
+
+✖ failing tests:
+
+test at tests/earnings-audit.test.mjs:21:1
+✖ confirmed settings must immediately refresh an already visible offer (49.504591ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(q('#offerVerdict').textContent.includes('-US$')||q('#offerVerdict').textContent.includes('-'))
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/a5f6855e65d0/workkit-2/tests/earnings-audit.test.mjs:21:367)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/earnings-audit.test.mjs:22:1
+✖ editing preview must use the same historical costs as the saved edit (59.696654ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(q('#orderResult').textContent.includes('38,72'))
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/a5f6855e65d0/workkit-2/tests/earnings-audit.test.mjs:22:538)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
