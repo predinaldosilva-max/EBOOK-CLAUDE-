@@ -1,3 +1,5 @@
+> Atualização 2.2.1: o Mapa agora abre fora do cofre. Este documento descreve a entrega inicial; consulte MAPA-FORA-DO-COFRE-V2.2.1.md e VALIDACAO-PUBLICACAO-V2.2.1.md para o comportamento atual.
+
 # USA Work Kit v2.2 — mapa pessoal e identidade
 
 ## Escopo
