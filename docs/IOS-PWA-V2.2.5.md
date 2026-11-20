@@ -12,7 +12,7 @@ O novo teste `tests/pwa-navigation.test.mjs` falhou três vezes contra o código
 - Cópia das respostas de navegação bem-sucedidas do mesmo domínio remove o histórico de redirecionamentos, preservando conteúdo e cabeçalhos. Respostas redirecionadas para outro domínio não são convertidas em conteúdo confiável.
 - Normalização das duas entradas HTML durante a instalação do cache. URLs antigas `/index.html` continuam atendidas.
 - Consultas usam somente o cache estático da versão atual.
-- A instalação busca cada arquivo em URL com identificador público da versão e o guarda na URL estável. A jornada Chromium detectou execução de JS 2.2.4 mesmo com o novo cache ativo; a busca identificada evita reutilizar a resposta antiga. Uma falha de download impede ativar uma versão incompleta e preserva o cache anterior.
+- A instalação busca cada arquivo em URL com identificador público da versão e o guarda na URL estável. A jornada Chromium observou JS 2.2.4 durante uma reabertura antecipada. O teste agora aguarda explicitamente a troca do controlador antes de conferir a versão executada; a presença de um cache novo, isoladamente, não comprova essa troca. A busca identificada reforça a atualização dos arquivos, sem atribuir a ela uma causa ainda não demonstrada. Uma falha de download impede ativar uma versão incompleta e preserva o cache anterior.
 - Nenhuma alteração em IndexedDB, localStorage, criptografia, chaves, donos de registros, acesso, licenciamento, backend ou D1. A limpeza de caches atinge apenas caches de arquivos estáticos anteriores, como já ocorria.
 
 ## Validação
