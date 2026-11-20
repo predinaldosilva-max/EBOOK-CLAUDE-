@@ -1,0 +1,17 @@
+✔ Android audit math, saved settings, local counts and exports round 1 (252.155886ms)
+✔ Android audit math, saved settings, local counts and exports round 2 (140.080712ms)
+✔ Android audit math, saved settings, local counts and exports round 3 (127.626433ms)
+✔ iPhone audit math, saved settings, local counts and exports round 1 (122.899642ms)
+✔ iPhone audit math, saved settings, local counts and exports round 2 (158.484946ms)
+✔ iPhone audit math, saved settings, local counts and exports round 3 (147.783999ms)
+✔ confirmed settings must immediately refresh an already visible offer (49.594672ms)
+✔ editing preview must use the same historical costs as the saved edit (64.95096ms)
+✔ calculator import is explicit, changes only draft fields and needs confirmation; unconfirmed settings never silently apply (48.556247ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1415.061016
