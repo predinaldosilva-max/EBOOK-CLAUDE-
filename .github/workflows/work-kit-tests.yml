@@ -39,10 +39,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
+      - run: node tests/pwa-browser.cjs
       - run: node tests/preventive-browser.cjs
       - run: node tests/earnings-audit-browser.cjs
       - run: node tests/vault-browser-upgrade.cjs
-      - run: node tests/pwa-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

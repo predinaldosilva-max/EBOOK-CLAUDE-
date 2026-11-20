@@ -18,7 +18,7 @@ O novo teste `tests/pwa-navigation.test.mjs` falhou três vezes contra o código
 
 Três execuções locais completas de `npm test`: cada uma com 135 testes principais aprovados, 39 testes base de cálculo, 26 grupos de qualidade e integração financeira. Quatro testes de build Python aprovados. O fluxo de CI repete essas verificações e executa os testes nativos antes da publicação.
 
-`tests/pwa-browser.cjs` acrescenta três rodadas por motor (WebKit/Chromium): host com redirecionamento real, cache antigo, tentativa de reabertura, atualização sem limpar dados, reabertura em três URLs, mesma chave e ocorrência fictícia, HTML offline e isolamento entre contextos. `tests/vault-browser-upgrade.cjs` mantém 12 jornadas de atualização desde 2.2.2. Artefatos e resultados finais ficam no workflow da revisão #15. Nenhum teste usa a chave secreta ou os documentos do usuário.
+`tests/pwa-browser.cjs` acrescenta três rodadas por motor (WebKit/Chromium): host com redirecionamento real, cache antigo, tentativa de reabertura, atualização sem limpar dados, reabertura em três URLs, mesma chave e ocorrência fictícia, HTML com servidor indisponível e isolamento entre contextos. `tests/vault-browser-upgrade.cjs` mantém 12 jornadas de atualização desde 2.2.2. Artefatos e resultados finais ficam no workflow da revisão #15. Nenhum teste usa a chave secreta ou os documentos do usuário.
 
 ## Recuperação sem excluir dados
 
@@ -28,7 +28,7 @@ Não limpar dados do Safari, excluir o app ou criar outro cofre como tratamento 
 
 ## Limitações e confirmação física
 
-WebKit automatizado não equivale a executar no iPhone físico ou reproduzir a separação de armazenamento de todas as versões do iOS. A confirmação final é: abrir pelo ícone, entrar, desbloquear o cofre correspondente, fechar totalmente e reabrir com a mesma chave. Repetir no Android. A validação de acesso continua exigindo internet; o teste de HTML offline não promete acesso autenticado offline.
+WebKit automatizado não equivale a executar no iPhone físico ou reproduzir a separação de armazenamento de todas as versões do iOS. A confirmação final é: abrir pelo ícone, entrar, desbloquear o cofre correspondente, fechar totalmente e reabrir com a mesma chave. Repetir no Android. A validação de acesso continua exigindo internet; o teste de HTML com conexões do servidor interrompidas não promete acesso autenticado offline. O controle de rede `setOffline` do Playwright/WebKit retornou erro interno ao navegar; a jornada usa interrupção real das conexões do servidor e registra essa limitação. Modo avião no iPhone físico continua sendo validação manual.
 
 Um cofre criado novamente tem uma chave própria. Não existe sincronização automática entre Safari, navegador interno e app instalado. Uma chave de outro cofre não deve autenticar o atual. O erro anterior de autenticação do usuário permanece sem causa comprovada; esta publicação não é apresentada como recuperação de um cofre cuja chave não autentica.
 

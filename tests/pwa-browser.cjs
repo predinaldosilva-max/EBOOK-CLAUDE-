@@ -1,9 +1,9 @@
 'use strict';
 const {chromium,webkit}=require('playwright'),http=require('node:http'),fs=require('node:fs/promises'),path=require('node:path'),{execFileSync}=require('node:child_process'),assert=require('node:assert/strict');
-const root=path.resolve('usa-work-kit'),out=path.resolve('qa-output/pwa-browser'),previous='c48a66570fddef060a505a6e0217eb57d4aa4937',files=new Map();let old=true;
+const root=path.resolve('usa-work-kit'),out=path.resolve('qa-output/pwa-browser'),previous='c48a66570fddef060a505a6e0217eb57d4aa4937',files=new Map();let old=true,networkDown=false;
 (async()=>{
  await fs.mkdir(out,{recursive:true});
- const server=http.createServer(async(req,res)=>{try{
+ const server=http.createServer(async(req,res)=>{if(networkDown){req.socket.destroy();return;}try{
   const url=new URL(req.url,'http://local');
   if(url.pathname.startsWith('/api/')){res.setHeader('Content-Type','application/json');res.end(url.pathname==='/api/activate'?'{"ok":true,"license":"002","generation":0,"token":null}':'{"ok":true}');return;}
   // Cloudflare's default HTML handling redirects this legacy PWA start URL.
@@ -33,13 +33,13 @@ const root=path.resolve('usa-work-kit'),out=path.resolve('qa-output/pwa-browser'
    for(const url of ['/index.html','/','/?reopen=1']){
     await page.close();page=await context.newPage();const r=await page.goto(origin+url);assert.equal(r.status(),200);await page.locator('.protection-hero button').click();await page.locator('#vaultKey').fill(key);await page.locator('#unlockVault').click();await page.locator('#lockVault').waitFor();assert.ok((await page.locator('#incidentList').innerText()).includes('FICTITIOUS PWA reopen evidence'));
    }
-   await context.setOffline(true);await page.goto(origin+'/index.html');assert.ok(await page.locator('#app').count());await context.setOffline(false);
+   networkDown=true;try{await page.goto(origin+'/index.html');assert.ok(await page.locator('#app').count());}finally{networkDown=false;}
    await page.reload();await page.locator('.protection-hero button').click();await page.locator('#vaultKey').fill(key);await page.locator('#unlockVault').click();await page.locator('#lockVault').waitFor();
    await page.screenshot({path:path.join(out,label+'-'+round+'.png'),fullPage:true});
    // A separate browser storage context starts without this vault. Keys and
    // records must not silently synchronize or be confused with another vault.
    const isolated=await browser.newContext({viewport:{width:390,height:844}}),other=await isolated.newPage();await other.goto(origin+'/');await other.locator('#accessPassword').fill('UW-0123456789ABCDEF');await other.locator('#accessForm button').click();await other.locator('#permissionLater').click();await other.locator('.protection-hero button').click();await other.locator('#createVault').waitFor();assert.equal(await other.locator('#unlockVault').count(),0);await isolated.close();
-   await context.close();console.log('PASS PWA '+label+' round '+round+': legacy redirect, safe recovery URL, update, three reopens, original key and evidence, offline HTML, isolated storage');
+   await context.close();console.log('PASS PWA '+label+' round '+round+': legacy redirect, safe recovery URL, update, three reopens, original key and evidence, HTML with server unavailable, isolated storage');
   }finally{await browser.close();}
  }}finally{server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
