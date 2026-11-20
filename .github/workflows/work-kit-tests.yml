@@ -28,6 +28,7 @@ jobs:
   native-browser-tests:
     needs: local-tests
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +39,6 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
       - run: node tests/pwa-browser.cjs
       - run: node tests/preventive-browser.cjs
       - run: node tests/earnings-audit-browser.cjs

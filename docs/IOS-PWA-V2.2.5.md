@@ -20,6 +20,8 @@ Três execuções locais completas de `npm test`: cada uma com 135 testes princi
 
 `tests/pwa-browser.cjs` acrescenta três rodadas por motor (WebKit/Chromium): host com redirecionamento real, cache antigo, tentativa de reabertura, atualização sem limpar dados, reabertura em três URLs, mesma chave e ocorrência fictícia, HTML com servidor indisponível e isolamento entre contextos. `tests/vault-browser-upgrade.cjs` mantém 12 jornadas de atualização desde 2.2.2. Artefatos e resultados finais ficam no workflow da revisão #15. Nenhum teste usa a chave secreta ou os documentos do usuário.
 
+O job de navegadores usa a imagem oficial gratuita `mcr.microsoft.com/playwright:v1.62.1-noble`, compatível com a dependência fixada no projeto e com navegadores/dependências já instalados. Isso evita repetir a instalação demorada das dependências do sistema; não modifica a hospedagem do aplicativo.
+
 ## Recuperação sem excluir dados
 
 Para uma instalação que ainda usa o cache antigo, o teste abre a raiz do mesmo domínio com `?pwa-recovery=2.2.5`, que não coincide com a chave HTML problemática do cache antigo. O service worker pode então atualizar. Esse procedimento precisa ocorrer no contexto afetado; abrir no navegador externo não garante atualizar o armazenamento da instalação de tela inicial do iPhone.
