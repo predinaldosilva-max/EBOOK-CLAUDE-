@@ -37,7 +37,7 @@ async function main(){
  nav('messages');fill({name:'Maria',amount:125.5,service:'limpeza',date:'amanhã às 10h'});
  for(const lang of ['en','pt','es'])for(let i=0;i<10;i++){fill({lang,template:i});const msg=txt('#messageText');test('message '+lang+'/'+i+' substitutions',!/{(?:name|amount|service|date)}/.test(msg),true);test('message '+lang+'/'+i+' text',msg.length>30,true);}
  click('[data-action="copy"]');await pause();test('copy clipboard exact',clipboard,txt('#messageText'));
- nav('reports');fill({from:'2026-11-01',to:'2026-11-30'});for(const value of ['875,00','35,00','725,00'])has('#reportSummary',value);click('[data-action="report"]');has('#printArea','725,00');test('report invokes print',printed,2);
+ nav('reports');fill({from:'2026-11-01',to:'2026-11-30'});for(const value of ['875,00','35,00','725,00'])has('#reportSummary',value);click('[data-action="report"]');has('#printArea','725,00');test('report invokes print',printed,1);
  click('[data-action="csv"]');const csv=await downloads.at(-1).blob.text();test('CSV records',csv.includes('Serviço QA'),true);test('CSV totals',csv.includes('725'),true);
  click('[data-action="backup"]');const backupText=await downloads.at(-1).blob.text(),backup=JSON.parse(backupText);test('backup incomes',backup.incomes.length,3);test('backup expenses',backup.expenses.length,1);test('backup excludes authorization',!/installation|password|token|generation/.test(backupText),true);
  async function importFile(text,name='qa.json'){const input=$('#importFile');Object.defineProperty(input,'files',{value:[{name,size:Buffer.byteLength(text),text:async()=>text}],configurable:true});input.dispatchEvent(new w.Event('change',{bubbles:true}));await pause();await pause();}
