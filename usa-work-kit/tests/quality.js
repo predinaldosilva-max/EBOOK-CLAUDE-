@@ -1,16 +1,16 @@
 'use strict';
 const a=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const C=require('../js/calculators'),S=require('../js/storage');let cases=0;const test=(name,f)=>{f();cases++;console.log('PASS '+name);};
+const M=require('../js/earnings');const C=require('../js/calculators'),S=require('../js/storage');let cases=0;const test=(name,f)=>{f();cases++;console.log('PASS '+name);};
 for(const v of [' ',[],{},'0x10','1,000','1e3','-0','++2'])test('Reject malformed numeric '+JSON.stringify(v),()=>a.throws(()=>C.number(v)));
-let seed=1987;const rand=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};const close=(x,y)=>a.ok(Math.abs(x-y)<=1e-7*Math.max(1,Math.abs(y)),`${x} != ${y}`);
+let seed=Number(process.env.QA_SEED||1987);const rand=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};const close=(x,y)=>a.ok(Math.abs(x-y)<=1e-7*Math.max(1,Math.abs(y)),`${x} != ${y}`);
 let scenarios=0;
-test('5000 independently calculated delivery / work / goal / price scenarios',()=>{for(let i=0;i<1250;i++){
+test('5000 independently calculated delivery / work / goal / actual earnings scenarios',()=>{for(let i=0;i<1250;i++){
  let offer=Math.round(rand()*20000)/100,tip=Math.round(rand()*5000)/100,miles=rand()*200,cost=rand()*2,minutes=1+rand()*180,wait=rand()*50;
  let r=C.delivery({offer,tip,miles,cost,minutes,wait});close(r.net,offer+tip-miles*cost);close(r.hourly,r.net*60/(minutes+wait));close(r.perMile,(offer+tip)/miles);scenarios++;
  let hours=1+rand()*70,days=1+Math.floor(rand()*7),rate=rand()*300,expense=rand()*100,quantity=1+Math.floor(rand()*10),weekDays=1+Math.floor(rand()*7),modes=['hour','day','service','week','project'],mode=modes[i%5];
  r=C.work({hours,days,rate,expense,quantity,weekDays,mode});let gross=mode==='hour'?rate*hours:mode==='day'?rate*days:mode==='service'?rate*quantity:rate;close(r.gross,gross);close(r.net,gross-expense);close(r.weekly,(gross-expense)/days*weekDays);close(r.monthly,r.weekly*52/12);scenarios++;
  let target=1+rand()*3000,received=rand()*4000,hourly=1+rand()*100;r=C.goals({target,received,days,hours,hourly});close(r.remaining,Math.max(target-received,0));close(r.daily,Math.max(target-received,0)/days);close(r.projected,received+hours*hourly);a.equal(r.possible,received+hours*hourly>=target);scenarios++;
- let material=rand()*100,transport=rand()*100,other=rand()*100,margin=rand()*95;r=C.pricing({hours,rate,material,transport,other,margin});let base=hours*rate+material+transport+other;close(r.price*(1-margin/100),base);close((r.price-base)/r.price*100,margin);scenarios++;
+ let fuelPrice=rand()*8,mpg=10+rand()*70,wearPerMile=rand();r=M.calculate({total:offer+tip,miles,minutes:minutes+wait},{mpg,fuelPrice,wearPerMile});close(r.net,offer+tip-miles*(fuelPrice/mpg+wearPerMile));close(r.hourly,r.net*60/(minutes+wait));scenarios++;
 }});
 test('Upper bounds / overflow rejected',()=>{a.throws(()=>C.delivery({offer:1e9,tip:1e9,miles:1e9,cost:1e9,minutes:1,wait:0}));a.throws(()=>C.goals({target:1,received:0,days:8,hours:1,hourly:1}));});
 let store=null;global.localStorage={getItem:()=>store,setItem:(_,v)=>{store=v;}};

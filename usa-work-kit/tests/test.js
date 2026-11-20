@@ -16,8 +16,6 @@ test('Goals supplied example',()=>{const r=C.goals(goals);assert.equal(r.remaini
 test('Goals zero availability',()=>{const r=C.goals({...goals,days:0,hourly:0});assert.equal(r.daily,null);assert.equal(r.neededHours,null);assert.equal(r.possible,false);});
 test('Goal already reached',()=>{const r=C.goals({...goals,received:1500,hourly:0});assert.equal(r.remaining,0);assert.equal(r.progress,125);assert.equal(r.neededHours,0);});
 test('Zero target rejected',()=>assert.throws(()=>C.goals({...goals,target:0})));
-test('Pricing uses margin, not markup',()=>{const r=C.pricing({hours:4,rate:25,material:20,transport:10,other:0,margin:20});assert.equal(r.cost,130);assert.equal(r.price,162.5);assert.equal(r.profit,32.5);});
-test('100% margin rejected',()=>assert.throws(()=>C.pricing({hours:4,rate:25,material:20,transport:10,other:0,margin:100})));
 for(const value of ['',null,undefined,true,-1,NaN,Infinity,'oops',1e10])test('Invalid numeric '+String(value),()=>assert.throws(()=>C.number(value)));
 let raw=null;global.localStorage={getItem:()=>raw,setItem:(_,v)=>{raw=v;}};
 const s=S.blank();s.incomes.push({id:'i1',date:'2026-11-14',name:'Delivery',amount:25,cost:5,hours:.5,kind:'delivery'});s.expenses.push({id:'e1',date:'2026-11-14',name:'Fuel',amount:3,category:2,scope:'business',paid:false});

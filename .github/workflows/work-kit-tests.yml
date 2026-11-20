@@ -16,7 +16,11 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npm test
+      - name: Three complete regression rounds
+        run: |
+          for round in 1 2 3; do
+            QA_SEED=$round npm test || exit 1
+          done
       - run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 
   native-browser-tests:
