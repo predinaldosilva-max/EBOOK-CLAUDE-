@@ -13,7 +13,7 @@ try {
   // Isolated fictional DB only: allow each browser to test the current TOTP step.
   await db.prepare('DELETE FROM admin_auth_state').run();await db.prepare('DELETE FROM admin_login_limits').run();
   const context=await browser.newContext({viewport,userAgent:ua,acceptDownloads:true}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await context.route(adminOrigin+'/**',async route=>{const req=route.request(),response=await mf.dispatchFetch(req.url(),{method:req.method(),headers:{...req.headers(),'CF-Connecting-IP':'192.0.2.1'},body:['GET','HEAD'].includes(req.method())?undefined:req.postDataBuffer()});await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});});
+  await context.route(adminOrigin+'/**',async route=>{const req=route.request(),response=await mf.dispatchFetch(req.url(),{redirect:'manual',method:req.method(),headers:{...req.headers(),'CF-Connecting-IP':'192.0.2.1'},body:['GET','HEAD'].includes(req.method())?undefined:req.postDataBuffer()});await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});});
   try {
    await page.goto(adminOrigin+'/');await page.waitForURL('**/login');await page.locator('#language').selectOption(['pt','es','en'][round]);
    await page.locator('#user').fill('owner');await page.locator('#password').fill('wrong');await page.locator('#code').fill('000000');await page.locator('#loginButton').click();await page.waitForFunction(()=>!document.querySelector('#loginButton').disabled&&document.querySelector('#status').textContent.length>0);assert.equal(await page.locator('#password').inputValue(),'');
