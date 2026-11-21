@@ -1,0 +1,11 @@
+# Reabrir a configuração privada original
+
+`admin/recuperar-painel.html` é um utilitário offline, fora dos assets do Worker público. Não possui gerador de credenciais. Abre somente um arquivo privado JSON escolhido pelo proprietário, verifica a estrutura e confere se a senha guardada corresponde ao verificador PBKDF2 do próprio arquivo. Não envia o conteúdo à rede, não usa armazenamento persistente do navegador e não altera o Cloudflare. Campos protegidos podem ser copiados individualmente. O resultado do teste TOTP aparece junto ao botão.
+
+Escolher `USA-WORK-KIT-ADMIN-PRIVADO.json` salvo **antes** do cadastro das variáveis no Cloudflare. Reabrir o arquivo original preserva usuário, senha e chave TOTP; não exige substituir as variáveis do servidor. Se o proprietário guardou várias configurações diferentes, o utilitário não consegue saber sozinho qual corresponde à implantação. A validação interna do arquivo não comprova correspondência com o servidor. O login continua sendo validado pelo backend.
+
+O utilitário de criação existente bloqueia nova geração depois que uma configuração foi criada na mesma página, inclusive chamadas repetidas ao handler. Não persiste segredos automaticamente: ao recarregar a página, os dados que estavam apenas em memória não são restaurados; deve-se usar o arquivo privado original, sem gerar outro conjunto. A recuperação não pode inventar ou reconstituir uma senha perdida a partir de seu hash. Se a cópia original não existir, será necessário um procedimento administrativo separado de substituição das credenciais, preservando o segredo de lotes já existente.
+
+Não alterar o BATCH_EXPORT_KEY para tentar resolver login. Não modificar licenças, dispositivos, registros de clientes nem cofres. Este utilitário não oferece recuperação de chaves dos cofres. Não enviar o JSON privado por chat ou GitHub. O arquivo HTML distribuído contém apenas código, nunca credenciais reais.
+
+Testes: importação íntegra sem aleatoriedade ou rede, rejeição de arquivo incompleto/adulterado/grande demais, limpeza de valores anteriores em falha, correspondência de senha/verificador, TOTP correto e incorreto com mensagem local visível, cópia do campo escolhido e bloqueio de regeneração. Não substituir a confirmação final do proprietário usando a cópia real e o login publicado.
