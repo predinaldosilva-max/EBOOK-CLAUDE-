@@ -3,7 +3,7 @@ on:
   push:
     branches: [usa-work-kit-2-protecao-local]
   pull_request:
-    paths: ['usa-work-kit/**', 'admin/**', 'migrations/**', 'server/**', 'tests/**', 'package*.json', 'schema.sql', 'wrangler*.jsonc', '.github/workflows/work-kit-tests.yml']
+    paths: ['admin/**', 'migrations/**', 'usa-work-kit/**', 'server/**', 'tests/**', 'package*.json', 'schema.sql', 'wrangler*.jsonc']
 permissions:
   contents: read
 jobs:
@@ -42,6 +42,7 @@ jobs:
       - name: Trust the checked-out repository for historical upgrade fixtures
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: node tests/admin-login-browser.mjs
+      - run: node tests/licensing-browser.cjs
       - run: node tests/protection-intelligence-browser.cjs
       - run: node tests/pwa-browser.cjs
       - run: node tests/preventive-browser.cjs
@@ -52,8 +53,9 @@ jobs:
         with:
           name: preventive-browser-fictional-data
           path: |
+            qa-output/admin-login-browser
+            qa-output/licensing-browser
             qa-output/preventive-browser
             qa-output/earnings-audit-browser
             qa-output/vault-browser-upgrade
             qa-output/pwa-browser
-            qa-output/admin-login-browser

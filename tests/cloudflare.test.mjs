@@ -2,9 +2,10 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 import {readFileSync} from 'node:fs';
+import {build} from 'esbuild';
 import {digest} from '../server/worker.mjs';
 test('Cloudflare workerd + D1: concurrency, reuse, test password and reset',async()=>{
- const mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:new URL('../server/worker.mjs',import.meta.url).pathname,compatibilityDate:'2026-11-17',d1Databases:['DB'],bindings:{RATE_SECRET:'r'.repeat(64),ADMIN_TOKEN:'t'.repeat(64)}}));
+ const mf=new Miniflare(convertV4MiniflareOptions({modules:true,script:(await build({entryPoints:[new URL('../server/worker.mjs',import.meta.url).pathname],bundle:true,write:false,format:'esm',platform:'browser'})).outputFiles[0].text,compatibilityDate:'2026-11-17',d1Databases:['DB'],bindings:{RATE_SECRET:'r'.repeat(64),ADMIN_TOKEN:'t'.repeat(64)}}));
  try{
  const db=await mf.getD1Database('DB');
  await db.exec(readFileSync(new URL('../schema.sql',import.meta.url),'utf8').replace(/\n/g,' '));

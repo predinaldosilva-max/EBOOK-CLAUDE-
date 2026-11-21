@@ -10,7 +10,7 @@ PUBLIC = ('index.html', 'styles.css', 'app.js', 'config.js', 'device-access.js',
 # USA WORK KIT: recursos locais para teste em celulares, em subdiretório isolado.
 PUBLIC += ('usa-work-kit/assets/icon-180.png', 'usa-work-kit/assets/icon-192.png', 'usa-work-kit/assets/icon-512.png', 'usa-work-kit/assets/icon.svg', 'usa-work-kit/css/style.css', 'usa-work-kit/index.html', 'usa-work-kit/js/app.js', 'usa-work-kit/js/calculators.js', 'usa-work-kit/js/reports.js', 'usa-work-kit/js/storage.js', 'usa-work-kit/js/translations.js', 'usa-work-kit/manifest.webmanifest', 'usa-work-kit/sw.js')
 
-PUBLIC += ('usa-work-kit/js/earnings-insights.js', 'usa-work-kit/js/earnings-insights-text.js')
+PUBLIC += ('usa-work-kit/js/license-access.js', 'usa-work-kit/js/earnings-insights.js', 'usa-work-kit/js/earnings-insights-text.js')
 
 PUBLIC += ('usa-work-kit/js/platform-rules-data.js', 'usa-work-kit/js/platform-rules.js', 'usa-work-kit/js/protection-timeline.js')
 

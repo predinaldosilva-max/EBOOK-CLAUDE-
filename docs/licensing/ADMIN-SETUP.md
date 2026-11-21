@@ -1,21 +1,11 @@
-# Etapa 1 — gerador separado
+# Painel administrativo — estado atual
 
-Base: 2.2.6, commit 7f189f6ae6d5033ebc3a01203539b9e051eaf5d6.
+O Worker `usa-work-kit-admin` foi publicado no endereço https://usa-work-kit-admin.pr-edinaldosilva.workers.dev/ e o proprietário confirmou o login com usuário, senha escolhida e Google Authenticator em 21/11/2026. A autenticação é própria; Cloudflare Access/Zero Trust não é necessário.
 
-Este branch adiciona somente o Worker administrativo, seus recursos, migração aditiva ainda não aplicada e testes. O código do aplicativo cliente, seu Worker, schema original e configuração de produção permanecem idênticos à base. Não converter, ativar, resetar ou modificar as 50 chaves existentes.
+Não gerar novas credenciais. Conservar os segredos já configurados. Os quatro valores do login são ADMIN_AUTH_MODE=local, ADMIN_ORIGIN com a origem HTTPS exata, ADMIN_USER com o usuário escolhido e ADMIN_PASSWORD como Secret. ADMIN_TOTP_SECRET e ADMIN_SESSION_SECRET também são Secrets. ADMIN_PASSWORD_RECORD antigo fica ignorado quando ADMIN_PASSWORD está presente. BATCH_EXPORT_KEY é um segredo interno e não é uma senha adicional a digitar no painel.
 
-Cloudflare: novo projeto Worker `usa-work-kit-admin`, branch `admin/generator-setup`, diretório raiz `/`, sem comando de build adicional, deploy `npx wrangler deploy --config wrangler.admin.jsonc`. Usar o mesmo repositório; não substituir o projeto usa-work-kit.
+A geração continua pausada por GENERATION_ENABLED=false até a migração 0001 e a publicação do cliente com suporte às chaves de 30 dias. A autenticação 0002 já foi aplicada. Ver IMPLANTACAO-MANUAL.md para a sequência restante.
 
-Geração bloqueada por padrão: manter GENERATION_ENABLED=false até as etapas finais. O Worker responde fechado sem as configurações de autenticação, sem segredos em frontend e sem credencial administrativa fixa.
+No formulário Gerar chaves: informar quantidade, identificação opcional e Gerar lote; não há confirmação de outra senha. As confirmações de revogação/reset/recuperação permanecem porque essas ações afetam acessos existentes.
 
-Variáveis necessárias no Admin: ACCESS_TEAM_DOMAIN, ACCESS_AUD, ADMIN_ORIGIN, ADMIN_EMAILS (segredo), BATCH_EXPORT_KEY (segredo de 32 bytes em base64), GENERATION_ENABLED. Binding DB aponta ao banco existente usa-work-kit-db. Nenhum valor real de segredo está no código.
-
-A configuração Access deve restringir os emails do proprietário. O backend verifica assinatura RS256, emissor, audiência, validade e allowlist. Operações de alteração exigem origem exata, JSON e cabeçalho próprio.
-
-A migração cria apenas tabelas/índices novos e será aplicada depois da proteção/conferência dos registros existentes. Não aplicar durante a criação inicial do painel.
-
-A geração de chaves de 32 caracteres não deve ser liberada comercialmente com o cliente 2.2.6: ele ainda usa o formato legado. A integração de validade, renovação e continuidade dos dados está no candidato completo 2.3.0-rc1; será publicada somente após a conferência final. As licenças antigas continuarão sem vencimento.
-
-Esta etapa pode criar um endereço Admin que responde configuração incompleta enquanto faltam binding, autenticação e migração. Isso é falha fechada, não gerador liberado. Não remover verificações para contornar essa condição.
-
-Rollback desta etapa: desativar o novo Worker Admin; como nenhum código cliente nem registro de licença foi alterado, a aplicação existente permanece funcionando. Depois de emitir chaves temporárias na etapa final, não reverter o validador para uma versão que desconheça vencimento.
+Deploy do Admin deve usar `npx wrangler deploy --config wrangler.admin.jsonc --keep-vars` para conservar as variáveis do dashboard. O aplicativo cliente usa wrangler.jsonc e continua em Worker separado.

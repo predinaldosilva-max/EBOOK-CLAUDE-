@@ -6,8 +6,8 @@ import {webcrypto} from 'node:crypto';
 const source=readFileSync(new URL('../usa-work-kit/js/app.js',import.meta.url),'utf8').split('// BEGIN ACCESS:')[1].split('\n').slice(1).join('\n').split('// END ACCESS')[0];
 function setup(saved={},responses=[]){
  const store=new Map(Object.entries(saved)),calls=[];
- const elements={app:{innerHTML:''},accessPassword:{value:''},accessError:{textContent:''},accessForm:{querySelector:()=>({disabled:false})}};
- const ctx=vm.createContext({crypto:webcrypto,TextEncoder,Uint8Array,btoa,AbortController,setTimeout,clearTimeout,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},document:{getElementById:k=>elements[k]},fetch:async(url,opt)=>{calls.push({url,data:JSON.parse(opt.body)});const r=responses.shift()||{ok:false,error:'invalid_or_bound'};return {ok:r.ok,json:async()=>r};}});
+ const elements={app:{innerHTML:''},accessPassword:{value:''},accessError:{textContent:''},accessForm:{insertAdjacentHTML:()=>{},querySelector:()=>({disabled:false})}};
+ const ctx=vm.createContext({crypto:webcrypto,performance,TextEncoder,Uint8Array,btoa,AbortController,setTimeout,clearTimeout,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},document:{getElementById:k=>elements[k]},fetch:async(url,opt)=>{calls.push({url,data:JSON.parse(opt.body)});const r=responses.shift()||{ok:false,error:'invalid_or_bound'};return {ok:r.ok,json:async()=>r};}});
  vm.runInContext(source,ctx);return {ctx,elements,store,calls};
 }
 test('legacy hash cannot unlock; activation saves installation and server grant',async()=>{
