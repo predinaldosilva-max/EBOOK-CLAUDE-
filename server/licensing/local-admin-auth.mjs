@@ -62,7 +62,9 @@ export async function localAuthRoute(request,env) {
  if(['/login','/login.html','/login.js','/admin.css','/admin-i18n.js'].includes(path)&&['GET','HEAD'].includes(request.method)) {
   // Static login assets contain no credentials or administrative data.
   if(url.origin!==env.ADMIN_ORIGIN)throw Error('configuration');
-  return env.ASSETS.fetch(new Request(new URL(path==='/login'?'/login.html':path,url),request));
+  // Use the canonical URL. ASSETS redirects /login.html to /login by default;
+  // rewriting /login back to /login.html would redirect to itself forever.
+  return env.ASSETS.fetch(request);
  }
  if(path!=='/auth/login'&&path!=='/api/logout')return null;
  if(request.method!=='POST')return json({error:'method'},405);
