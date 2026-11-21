@@ -1,3 +1,4 @@
+import {terms,activateTemporary,checkTemporary} from './licensing/temporary.mjs';
 const enc = new TextEncoder();
 export async function digest(value) {
  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -40,9 +41,14 @@ export default {
    if(path==='/api/activate'){
     if(typeof data.password!=='string')return fail('input',400);
     const password=data.password.trim().toUpperCase();
-    if(!/^UW-[A-F0-9]{16}$/.test(password))return fail('invalid',401);
+    if(!/^UW-(?:[A-F0-9]{16}|[A-F0-9]{32})$/.test(password))return fail('invalid',401);
     const hash=await digest(password);
     if(await limited(env.DB,await digest(env.RATE_SECRET+':code:'+hash),60))return fail('rate',429);
+    const candidate=await env.DB.prepare('SELECT id FROM licenses WHERE password_hash=? AND disabled=0').bind(hash).first();
+    if(candidate&&await terms(env.DB,candidate.id)){
+     try{return json(await activateTemporary(env.DB,candidate.id,install,data.previous));}catch(e){return fail(e.message,['expired','owner_proof'].includes(e.message)?403:e.message==='invalid_or_bound'?409:503);}
+    }
+    if(candidate?.id.startsWith('T-'))return fail('configuration',503);
     // Atomic compare-and-set: two installations can never both claim a commercial license.
     const row=await env.DB.prepare(`UPDATE licenses SET installation_hash=CASE WHEN is_test=1 THEN NULL ELSE ? END, activated_at=COALESCE(activated_at,?) WHERE password_hash=? AND disabled=0 AND (is_test=1 OR installation_hash IS NULL OR installation_hash=?) RETURNING id,generation,is_test`).bind(install,Date.now(),hash,install).first();
     if(!row)return fail('invalid_or_bound',409);
@@ -54,8 +60,12 @@ export default {
     return json({ok:true,license:row.id,generation:row.generation,token});
    }
    if(typeof data.license!=='string'||!Number.isSafeInteger(data.generation))return fail('input',400);
-   const row=await env.DB.prepare(`SELECT l.id FROM licenses l WHERE l.id=? AND l.generation=? AND l.disabled=0 AND ((l.is_test=0 AND l.installation_hash=?) OR (l.is_test=1 AND EXISTS(SELECT 1 FROM test_sessions t WHERE t.license_id=l.id AND t.generation=l.generation AND t.installation_hash=? AND t.token_hash=? AND t.expires>?)))`).bind(data.license,data.generation,install,install,await digest(typeof data.token==='string'?data.token:''),Date.now()).first();
-   return row?json({ok:true}):fail('revoked',401);
+   const row=await env.DB.prepare(`SELECT l.id,l.generation FROM licenses l WHERE l.id=? AND l.generation=? AND l.disabled=0 AND ((l.is_test=0 AND l.installation_hash=?) OR (l.is_test=1 AND EXISTS(SELECT 1 FROM test_sessions t WHERE t.license_id=l.id AND t.generation=l.generation AND t.installation_hash=? AND t.token_hash=? AND t.expires>?)))`).bind(data.license,data.generation,install,install,await digest(typeof data.token==='string'?data.token:''),Date.now()).first();
+   if(!row)return fail('revoked',401);
+   const policy=await terms(env.DB,row.id);
+   if(policy){try{return json(checkTemporary(row,policy));}catch(e){return fail(e.message,403);}}
+   if(row.id.startsWith('T-'))return fail('configuration',503);
+   return json({ok:true});
   }catch{return fail('unavailable',503);}
  },
  async scheduled(event,env){await env.DB.batch([env.DB.prepare('DELETE FROM attempts WHERE expires < ?').bind(Math.floor(Date.now()/1000)),env.DB.prepare('DELETE FROM test_sessions WHERE expires < ?').bind(Date.now())]);}

@@ -1,3 +1,4 @@
+const {build}=require('esbuild');
 const {JSDOM,VirtualConsole}=require('jsdom');
 const {Miniflare,convertV4MiniflareOptions}=require('miniflare');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{webcrypto,createHash}=require('node:crypto');
@@ -6,7 +7,7 @@ const check=(n,a,e)=>{try{assert.deepEqual(a,e,n);results.push(n);console.log('P
 const pause=()=>new Promise(r=>setImmediate(r));
 async function main(){
  fs.mkdirSync('qa-output',{recursive:true});
- const mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:path.resolve('server/worker.mjs'),compatibilityDate:'2026-11-17',d1Databases:['DB'],bindings:{RATE_SECRET:'qa-rate-secret-not-production',ADMIN_TOKEN:'qa-admin-secret-not-production-123456'}}));
+ const mf=new Miniflare(convertV4MiniflareOptions({modules:true,script:(await build({entryPoints:[path.resolve('server/worker.mjs')],bundle:true,write:false,format:'esm',platform:'browser'})).outputFiles[0].text,compatibilityDate:'2026-11-17',d1Databases:['DB'],bindings:{RATE_SECRET:'qa-rate-secret-not-production',ADMIN_TOKEN:'qa-admin-secret-not-production-123456'}}));
  try{
  const db=await mf.getD1Database('DB');await db.exec(fs.readFileSync('schema.sql','utf8').replace(/\n/g,' '));await db.prepare('INSERT INTO licenses(id,password_hash,is_test) VALUES(?,?,0)').bind('002',createHash('sha256').update('UW-0123456789ABCDEF').digest('hex')).run();
  for(const label of ['Android-DOM','iPhone-DOM']){

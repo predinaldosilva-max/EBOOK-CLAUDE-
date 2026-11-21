@@ -1,0 +1,10 @@
+{
+ "$schema":"node_modules/wrangler/config-schema.json",
+ "name":"usa-work-kit-admin",
+ "main":"admin/worker.mjs",
+ "compatibility_date":"2026-11-17",
+ "workers_dev":true,
+ "assets":{"directory":"./admin/public","binding":"ASSETS","run_worker_first":true},
+ "d1_databases":[{"binding":"DB","database_name":"usa-work-kit-db","database_id":"f1bc1f76-ba3d-4ed6-9b7b-de99f2f9a164"}],
+ "observability":{"enabled":false}
+}

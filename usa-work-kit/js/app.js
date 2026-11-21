@@ -3,10 +3,28 @@
 // BEGIN ACCESS: server activation. Legacy local grants are never trusted.
 const ACCESS_KEY='usa-work-kit-server-access-v1';
 const INSTALL_KEY='usa-work-kit-installation-v1';
-let grant=null,installation='';
+const OWNER_PROOF='usa-work-kit-last-owner-proof-v1',EXPIRED_KEY='usa-work-kit-expired-access-v1';
+let grant=null,installation='',lastRequestStarted=0,lease=null,rechecking=null;
+function expiredMessage(){return 'Seu período de acesso terminou. Para continuar utilizando o USA Work Kit, adquira uma nova chave de acesso de 30 dias. / Tu período de acceso ha finalizado. Para seguir utilizando USA Work Kit, adquiere una nueva clave de acceso de 30 días. / Your access period has ended. To continue using USA Work Kit, purchase a new 30-day access key.';}
+function endAccess(reason){lease?.stop();Protection.lock();document.getElementById('app')?.replaceChildren();if(reason==='expired')try{localStorage.setItem(EXPIRED_KEY,'yes');}catch{}location.reload();}
+function acceptGrant(result,base){
+ const next={license:result.license??base?.license,generation:result.generation??base?.generation,token:result.token??base?.token??null};
+ if(result.kind==='temporary'){if(!window.LicenseAccess)throw Error('configuration');Object.assign(next,{kind:result.kind,owner:result.owner,expiresAt:result.expiresAt,serverTime:result.serverTime,leaseMs:result.leaseMs});if(!lease)lease=new LicenseAccess.Lease({onDue:reason=>reason==='expired'?endAccess('expired'):revalidateAccess()});lease.accept(next,lastRequestStarted);}
+ grant=next;localStorage.setItem(ACCESS_KEY,JSON.stringify(grant));
+ if(!grant.token)localStorage.setItem(OWNER_PROOF,JSON.stringify({license:grant.license,generation:grant.generation,owner:grant.kind==='temporary'?grant.owner:String(grant.license)}));
+ localStorage.removeItem(EXPIRED_KEY);return next;
+}
+async function revalidateAccess(){if(rechecking)return rechecking;const app=document.getElementById('app');if(grant?.kind==='temporary'&&app)app.inert=true;rechecking=(async()=>{try{const result=await accessRequest('validate',grant);acceptGrant(result,grant);}catch(e){endAccess(e.message);}finally{if(app)app.inert=false;rechecking=null;}})();return rechecking;}
+function backupExpired(){
+ const box=document.getElementById('expiredRecovery');if(!box)return;box.hidden=localStorage.getItem(EXPIRED_KEY)!=='yes';
+ const download=(name,text,type)=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type}));a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);};
+ let proof;try{proof=JSON.parse(localStorage.getItem(OWNER_PROOF)||'null');}catch{}if(!proof?.owner){document.getElementById('expiredFinance').disabled=true;document.getElementById('expiredVault').disabled=true;document.getElementById('expiredRecoveryStatus').textContent='Vínculo local indisponível / Vínculo local no disponible / Local ownership unavailable';return;}
+ document.getElementById('expiredFinance').onclick=()=>{const raw=localStorage.getItem('usa-work-kit-finance-v2:'+encodeURIComponent(proof.owner));if(!raw){document.getElementById('expiredRecoveryStatus').textContent='Sem registros financeiros locais / Sin registros financieros locales / No local financial records';return;}try{download('USA-WORK-KIT-financial-backup.json',JSON.stringify(Store.validate(JSON.parse(raw)),null,2),'application/json');document.getElementById('expiredRecoveryStatus').textContent='Backup preparado / Copia preparada / Backup prepared';}catch{download('USA-WORK-KIT-financial-recovery-original.json',raw,'application/json');document.getElementById('expiredRecoveryStatus').textContent='Cópia original para revisão / Copia original para revisar / Original copy for review';}};
+ document.getElementById('expiredVault').onclick=async()=>{try{const v=new ProtectionVault.Vault(proof.owner);download('USA-WORK-KIT-locked-backup.uwkv',await v.exportLockedBackup(),'application/json');document.getElementById('expiredRecoveryStatus').textContent='Backup cifrado preparado / Copia cifrada preparada / Encrypted backup prepared';}catch{document.getElementById('expiredRecoveryStatus').textContent='Sem cofre local disponível / No hay bóveda local / No local vault available';}};
+}
 async function accessRequest(path,payload){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
- try{const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,installation}),cache:'no-store',signal:controller.signal});
+ try{lastRequestStarted=performance.now();const response=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,installation}),cache:'no-store',signal:controller.signal});
  let result;try{result=await response.json();}catch{throw Error('http_'+(response.status||'unknown'));}
  if(!response.ok)throw Error(result.error||('http_'+response.status));
  if(result.ok!==true)throw Error('unexpected_response');return result;
@@ -14,7 +32,7 @@ async function accessRequest(path,payload){
 }
 function accessErrorMessage(e){
  const messages={
- invalid:'Senha inválida. Use o código completo UW- e 16 caracteres. / Contraseña incorrecta. Usa el código completo UW- y 16 caracteres.',
+ invalid:'Senha inválida. Use o código completo UW- com 16 ou 32 caracteres. / Contraseña incorrecta. Usa el código completo UW- y 16 o 32 caracteres.',
  invalid_or_bound:'Senha inválida ou já ativada em outra instalação. Fale com o vendedor. / Contraseña incorrecta o activada en otra instalación. Contacta al vendedor.',
  storage:'Permita armazenamento neste navegador. / Permite almacenamiento en este navegador.',
  rate:'Muitas tentativas. Aguarde 15 minutos. / Demasiados intentos. Espera 15 minutos.',
@@ -23,8 +41,10 @@ function accessErrorMessage(e){
  origin:'Origem do acesso recusada. Abra o link no Safari ou Chrome. / Origen rechazado. Abre el enlace en Safari o Chrome.',
  input:'Dados de ativação inválidos. Contate o vendedor. / Datos de activación incorrectos. Contacta al vendedor.'
  };
+ if(e.message==='expired')return expiredMessage();
+ if(e.message==='owner_proof')return 'Não foi possível comprovar o vínculo anterior nesta instalação. Preserve seus backups e contate o vendedor. / No se pudo comprobar el vínculo anterior. Conserva tus copias y contacta al vendedor. / Previous installation ownership could not be verified. Keep your backups and contact the seller.';
  const code=e.name==='AbortError'?'timeout':e.message;
- const english={invalid:'Invalid code. Use UW- followed by 16 hexadecimal characters.',invalid_or_bound:'Invalid code or already activated on another installation. Contact the seller.',storage:'Allow browser storage.',rate:'Too many attempts. Wait 15 minutes.',configuration:'Server configuration incomplete. Contact the seller.',unavailable:'Server or database temporarily unavailable.',origin:'Access origin rejected. Open in Safari or Chrome.',input:'Invalid activation details. Contact the seller.'};
+ const english={invalid:'Invalid code. Use UW- followed by 16 or 32 hexadecimal characters.',invalid_or_bound:'Invalid code or already activated on another installation. Contact the seller.',storage:'Allow browser storage.',rate:'Too many attempts. Wait 15 minutes.',configuration:'Server configuration incomplete. Contact the seller.',unavailable:'Server or database temporarily unavailable.',origin:'Access origin rejected. Open in Safari or Chrome.',input:'Invalid activation details. Contact the seller.'};
  if(messages[code])return messages[code]+' / '+english[code]+' ['+code+']';
  if(code==='timeout')return 'O servidor demorou para responder. Tente novamente. / El servidor tardó en responder. Intenta de nuevo. / The server took too long. Try again. [timeout]';
  if(/^http_[0-9]{3}$/.test(code))return 'Resposta inesperada do servidor. / Respuesta inesperada del servidor. / Unexpected server response. ['+code+']';
@@ -40,20 +60,22 @@ async function requireAccess(){
   }
   if(localStorage.getItem(INSTALL_KEY)!==installation)throw Error('storage');
   grant=JSON.parse(localStorage.getItem(ACCESS_KEY)||'null');
-  if(grant){try{await accessRequest('validate',grant);return true;}catch{}}
+  if(grant){try{acceptGrant(await accessRequest('validate',grant),grant);return true;}catch(e){if(e.message==='expired')localStorage.setItem(EXPIRED_KEY,'yes');}}
  }catch{installation='';}
  const host=document.getElementById('app');
- host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><small>v2.2.6</small><h2>Acceso del comprador / Buyer access</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.<br>Enter the full access code sent after your purchase.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña / Access code</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="32" required><button type="submit">Entrar / Sign in</button><p id="accessError" role="alert"></p></form><p>Conexão necessária para validar o acesso. / Conexión necesaria para validar el acceso.<br>Internet is required to validate access.</p><p class="device-note">A senha fica vinculada a esta instalação. Não limpe os dados do navegador. / La contraseña queda vinculada a esta instalación. No borres los datos del navegador.<br>This access code is bound to this installation. Do not clear browser data.</p></section></main>';
+ host.innerHTML='<main class="device-gate"><section class="device-card"><span class="device-brand">USA WORK KIT</span><h1>Acesso do comprador</h1><small>v2.3.0-rc1</small><h2>Acceso del comprador / Buyer access</h2><p>Digite a senha enviada após sua compra.<br>Introduce la contraseña enviada después de tu compra.<br>Enter the full access code sent after your purchase.</p><form id="accessForm"><label for="accessPassword">Senha / Contraseña / Access code</label><input id="accessPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" maxlength="64" required><button type="submit">Entrar / Sign in</button><p id="accessError" role="alert"></p></form><p>Conexão necessária para validar o acesso. / Conexión necesaria para validar el acceso.<br>Internet is required to validate access.</p><p class="device-note">A senha fica vinculada a esta instalação. Não limpe os dados do navegador. / La contraseña queda vinculada a esta instalación. No borres los datos del navegador.<br>This access code is bound to this installation. Do not clear browser data.</p></section></main>';
  return new Promise(resolve=>{
  const form=document.getElementById('accessForm'),input=document.getElementById('accessPassword'),error=document.getElementById('accessError');
+ if(localStorage.getItem(EXPIRED_KEY)==='yes')error.textContent=expiredMessage();
+ form.insertAdjacentHTML('afterend','<details id="expiredRecovery" hidden><summary>Recuperar meus backups / Recuperar mis copias / Recover my backups</summary><p>Os dados permanecem neste navegador. O cofre exige a chave de recuperação original. / Los datos permanecen en este navegador. La bóveda requiere la clave original. / Data remains in this browser. The vault requires its original recovery key.</p><button type="button" id="expiredFinance">Backup financeiro / Copia financiera / Financial backup</button><button type="button" id="expiredVault">Backup cifrado / Copia cifrada / Encrypted backup</button><p id="expiredRecoveryStatus" role="status"></p></details>');backupExpired();
  form.onsubmit=async event=>{
  event.preventDefault();const button=form.querySelector('button');button.disabled=true;
  try{
   if(!installation)throw Error('storage');
   const password=input.value.trim().toUpperCase();
-  if(!/^UW-[A-F0-9]{16}$/.test(password))throw Error('invalid');
-  grant=await accessRequest('activate',{password});
-  localStorage.setItem(ACCESS_KEY,JSON.stringify({license:grant.license,generation:grant.generation,token:grant.token}));
+  if(!/^UW-(?:[A-F0-9]{16}|[A-F0-9]{32})$/.test(password))throw Error('invalid');
+  let previous=null;try{const p=JSON.parse(localStorage.getItem(OWNER_PROOF)||'null');if(p)previous={license:p.license,generation:p.generation};}catch{}
+  acceptGrant(await accessRequest('activate',{password,previous}));
   input.value='';resolve(true);
  }catch(e){error.textContent=accessErrorMessage(e);}
  finally{button.disabled=false;}
@@ -63,10 +85,13 @@ async function requireAccess(){
 // END ACCESS
 if(!await requireAccess())return;
 
-setInterval(async()=>{try{await accessRequest('validate',grant);}catch{Protection.lock();location.reload();}},5*60*1000);
+setInterval(()=>{if(grant?.kind!=='temporary')revalidateAccess();},5*60*1000);
+addEventListener('pageshow',()=>{if(grant?.kind==='temporary')revalidateAccess();});
+addEventListener('focus',()=>{if(grant?.kind==='temporary')revalidateAccess();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&grant?.kind==='temporary')revalidateAccess();});
 // Local ownership is independent of generation: a reset must not erase the vault.
 // Test sessions are isolated per installation and must never hold real evidence.
-const owner=String(grant.license)+(grant.token?':test:'+ (await ProtectionVault.hash(new TextEncoder().encode(installation))).slice(0,24):'');
+const owner=grant.kind==='temporary'?grant.owner:String(grant.license)+(grant.token?':test:'+ (await ProtectionVault.hash(new TextEncoder().encode(installation))).slice(0,24):'');
 Store.setOwner(owner);
 
 let state=Store.load(),blocked=Store.error==='storageRead',page='home',offerA=null,editing=null,expenseDraft=null,offline=false;
@@ -87,7 +112,7 @@ const numField=(k,l,v)=>field(k,l,v);
 const draft=(k,defaults)=>Object.assign({},defaults,state.drafts[k]||{});
 const formValues=()=>Object.fromEntries(new FormData($('#toolForm')));
 function pageHeader(){return `<div class="hero"><div><div class="eyebrow">SMART TOOLS FOR WORKERS</div><h1>${esc(t(page==='home'?'tagline':page))}</h1><p>${esc(page==='home'?t('intro'):(t(page+'Desc')===page+'Desc'?t('live'):t(page+'Desc')))}</p></div><span class="badge"><span class="dot" style="background:var(--green)"></span>${esc(t('local'))}</span></div>`;}
-function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':state.lang;$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home','protection','reports','more'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español / English<br>v2.2.6</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select><button id="lockAccess" type="button">${esc(t('lockAccess'))}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${page==='home'?'':pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
+function render(){document.documentElement.lang=state.lang==='pt'?'pt-BR':state.lang;$('#app').innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="assets/icon.svg" alt=""><div><strong>USA WORK KIT</strong><small>Smart Tools for Workers</small></div></div><nav class="nav" aria-label="${esc(t('tools'))}">${['home','protection','reports','more'].map(k=>`<button data-page="${k}" class="${page===k?'active':''}" ${page===k?'aria-current="page"':''}><span class="ico" aria-hidden="true">${icons[k]}</span>${esc(t(k))}</button>`).join('')}</nav><div class="sidefoot"><span class="dot"></span>${esc(t('local'))}<br>USD · PT-BR / Español / English<br>v2.3.0-rc1</div></aside><main class="main"><header class="topbar"><span class="eyebrow">${esc(t(page))}</span><select class="lang" id="language" aria-label="Idioma"><option value="pt" ${state.lang==='pt'?'selected':''}>PT-BR</option><option value="es" ${state.lang==='es'?'selected':''}>Español</option><option value="en" ${state.lang==='en'?'selected':''}>English</option></select><button id="lockAccess" type="button">${esc(t('lockAccess'))}</button></header><div id="storageAlert" class="warning" ${Store.error?'':'hidden'}>${Store.error?esc(t(Store.error)):''}</div>${page==='home'?'':pageHeader()}<div id="content"></div><footer class="bottom">${esc(t('storageWarning'))}<br>${esc(t('currency'))}<br>${esc(t('footer'))}</footer></main></div>`;
  ({protection:renderProtection,more:renderMore,home:renderHome,delivery:renderDelivery,work:renderWork,goals:renderGoals,expenses:renderExpenses,earnings:renderEarnings,earningsMigration:()=>mountVault('earningsMigration'),messages:renderMessages,reports:renderReports})[page]();
  $('#lockAccess').onclick=()=>{Protection.lock();try{localStorage.removeItem(ACCESS_KEY);}catch(e){}location.reload();};
  $('#language').onchange=e=>{if(Protection.hasPending()&&!confirm(t('pendingFilesConfirm'))){e.target.value=state.lang;return;}if(page==='expenses'&&$('#toolForm')){expenseDraft=formValues();expenseDraft.paid=$('#paid').checked;}state.lang=e.target.value;persist();render();};document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>navigate(b.dataset.page));document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>action(b.dataset.action));

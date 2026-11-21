@@ -20,8 +20,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "usa-work-kit-db",
-      "database_id": "f1bc1f76-ba3d-4ed6-9b7b-de99f2f9a164"
+      "database_name": "usa-work-kit-local-fixtures",
+      "database_id": "00000000-0000-0000-0000-000000000001"
     }
   ]
 },

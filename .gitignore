@@ -8,3 +8,8 @@ node_modules/
 .wrangler/
 .dev.vars
 qa-output/
+
+# Private owner-side licensing backups and secrets (never commit).
+uwk-before-*.sql
+uwk-legacy-*.json
+uwk-batch-export-key.txt

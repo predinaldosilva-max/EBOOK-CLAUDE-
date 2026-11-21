@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>Recuperar configuração original — USA Work Kit Admin</title>
+<style>
+*{box-sizing:border-box}body{font:17px/1.5 system-ui;max-width:780px;margin:24px auto;padding:18px;background:#f3f7f4;color:#16392e}section{background:white;padding:20px;margin:18px 0;border:1px solid #cad9d1;border-radius:12px}h1{font-size:1.6rem}h2{font-size:1.2rem}label{display:block;margin-top:16px}input,button{font:inherit;padding:12px;max-width:100%;border:1px solid #afc5b9;border-radius:8px}input{width:100%}button{background:#205b49;color:white;margin:8px 5px 8px 0;cursor:pointer;min-height:46px}.note{background:#fff1ca;padding:14px;border-radius:8px}.feedback{padding:14px;border:2px solid #205b49;background:#e8f5ed;overflow-wrap:anywhere}.feedback:empty{display:none}.error{border-color:#a63428;background:#fff0eb}[hidden]{display:none!important}small{display:block}a{color:#185541}#filename{overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<h1>Abra sua configuração original</h1>
+<p>Esta ferramenta <strong>não gera senhas nem chaves</strong>. Ela apenas abre a cópia privada que você já salvou. Não altera o Cloudflare.</p>
+<p class="note">Use no seu computador privado. O arquivo será lido somente neste navegador, sem envio pela Internet. Não compartilhe o arquivo nem fotos dos valores.</p>
+<section>
+<h2>1. Escolha a cópia que usou no Cloudflare</h2>
+<label for="backup">Abrir arquivo USA-WORK-KIT-ADMIN-PRIVADO.json</label>
+<input id="backup" type="file" accept=".json,application/json">
+<small>Se houver várias cópias, escolha a original, salva antes de cadastrar as variáveis. Esta ferramenta não consegue saber qual delas foi usada no servidor.</small>
+<p id="loadStatus" class="feedback" role="status" aria-live="polite"></p>
+</section>
+<section id="recovered" hidden>
+<h2>2. Seus valores originais</h2>
+<p id="filename"></p>
+<label for="user">Usuário do painel</label><input id="user" readonly autocomplete="off"><button id="copyUser">Copiar usuário</button>
+<label for="password">Senha de login original</label><input id="password" type="password" readonly autocomplete="off"><button id="copyPassword">Copiar senha</button><button id="showPassword">Mostrar senha</button>
+<label for="totp">Chave original para cadastrar no Google Authenticator</label><input id="totp" type="password" readonly autocomplete="off"><button id="copyTotp">Copiar chave</button><button id="showTotp">Mostrar chave</button>
+<p>Se precisar cadastrar essa chave no Google Authenticator, use o tipo <strong>Baseado no horário</strong>. Não precisa gerar uma configuração nova.</p>
+<p id="copyStatus" class="feedback" role="status" aria-live="polite"></p>
+<h2>3. Confira o código do Google Authenticator</h2>
+<label for="code">Seis números que o aplicativo mostra agora</label><input id="code" inputmode="numeric" maxlength="12" autocomplete="off">
+<button id="verify">Conferir código</button>
+<p id="verifyStatus" class="feedback" role="status" aria-live="polite"></p>
+<p>O resultado aparece aqui, junto do botão. Os relógios do Mac e do iPhone precisam estar sincronizados automaticamente.</p>
+<p><a href="https://usa-work-kit-admin.pr-edinaldosilva.workers.dev/login" target="_blank" rel="noopener noreferrer">Abrir o login do painel</a></p>
+<p class="note">Conferir aqui prova apenas que o código corresponde à chave deste arquivo. A entrada no painel confirma se o servidor está com a mesma configuração. Não recadastre variáveis nem substitua segredos enquanto não identificar a cópia original.</p>
+</section>
+<script>
+(function(){'use strict';
+const $=id=>document.getElementById(id),enc=new TextEncoder();let original=null,busy=false;
+const b64=b=>btoa(String.fromCharCode(...b));
+function decode32(s){let bits=0,n=0,out=[];for(const c of s){n=(n<<5)|'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(c);bits+=5;if(bits>=8){bits-=8;out.push((n>>>bits)&255);}}return new Uint8Array(out);}
+function message(id,text,error=false){const node=$(id);node.textContent=text;node.classList.toggle('error',error);node.scrollIntoView?.({block:'nearest'});}
+async function validate(data){
+ if(!data||typeof data!=='object'||Array.isArray(data)||typeof data.password!=='string'||data.password.length<20||data.password.length>256)throw Error();
+ const v=data.variables;if(!v||typeof v!=='object'||Array.isArray(v)||v.ADMIN_AUTH_MODE!=='local'||typeof v.ADMIN_USER!=='string'||v.ADMIN_USER.length<3||v.ADMIN_USER.length>100||typeof v.ADMIN_ORIGIN!=='string'||!/^https:\/\/[^/]+$/.test(v.ADMIN_ORIGIN)||!['true','false'].includes(v.GENERATION_ENABLED))throw Error();
+ if(typeof v.ADMIN_PASSWORD_RECORD!=='string'||!/^pbkdf2-sha256\$100000\$[A-Za-z0-9+/]{22}==\$[A-Za-z0-9+/]{43}=$/.test(v.ADMIN_PASSWORD_RECORD)||typeof v.ADMIN_TOTP_SECRET!=='string'||!/^[A-Z2-7]{32}$/.test(v.ADMIN_TOTP_SECRET))throw Error();
+ for(const name of ['ADMIN_SESSION_SECRET','BATCH_EXPORT_KEY'])if(typeof v[name]!=='string'||!/^[A-Za-z0-9+/]{43}=$/.test(v[name]))throw Error();
+ const parts=v.ADMIN_PASSWORD_RECORD.split('$'),salt=Uint8Array.from(atob(parts[2]),c=>c.charCodeAt(0)),key=await crypto.subtle.importKey('raw',enc.encode(data.password),'PBKDF2',false,['deriveBits']);
+ const result=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',iterations:100000,salt},key,256));if(b64(result)!==parts[3])throw Error();
+ return {password:data.password,user:v.ADMIN_USER,totp:v.ADMIN_TOTP_SECRET,bytes:decode32(v.ADMIN_TOTP_SECRET)};
+}
+$('backup').onchange=async()=>{
+ if(busy)return;const file=$('backup').files?.[0];if(!file)return;busy=true;$('backup').disabled=true;
+ original=null;$('recovered').hidden=true;for(const id of ['password','totp','user','code'])$(id).value='';$('verifyStatus').textContent='';$('copyStatus').textContent='';
+ try{if(file.size>20000)throw Error();const next=await validate(JSON.parse(await file.text()));original=next;$('user').value=next.user;$('password').value=next.password;$('totp').value=next.totp;$('password').type='password';$('totp').type='password';$('showPassword').textContent='Mostrar senha';$('showTotp').textContent='Mostrar chave';$('filename').textContent='Arquivo aberto: '+file.name;$('recovered').hidden=false;message('loadStatus','Cópia aberta e verificada. A senha e as chaves deste arquivo foram preservadas. Nenhuma configuração foi gerada ou enviada ao Cloudflare.');}
+ catch{message('loadStatus','Não foi possível abrir essa cópia. Selecione o arquivo privado original completo. Nenhum dado do servidor foi alterado.',true);}
+ finally{busy=false;$('backup').disabled=false;}
+};
+for(const [button,field,label]of [['showPassword','password','senha'],['showTotp','totp','chave']])$(button).onclick=()=>{const input=$(field),show=input.type==='password';input.type=show?'text':'password';$(button).textContent=(show?'Ocultar ':'Mostrar ')+label;};
+for(const [button,field]of [['copyUser','user'],['copyPassword','password'],['copyTotp','totp']])$(button).onclick=async()=>{if(!original)return;try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText($(field).value);message('copyStatus','Valor copiado. Cole somente no campo correspondente.');}catch{$(field).type='text';$(field).focus();$(field).select();message('copyStatus','Valor selecionado. Pressione Command + C para copiar.');}};
+async function otp(counter){const bytes=new Uint8Array(8);let n=BigInt(counter);for(let i=7;i>=0;i--){bytes[i]=Number(n&255n);n>>=8n;}const key=await crypto.subtle.importKey('raw',original.bytes,{name:'HMAC',hash:'SHA-1'},false,['sign']),h=new Uint8Array(await crypto.subtle.sign('HMAC',key,bytes)),offset=h[19]&15;return String((((h[offset]&127)<<24)|(h[offset+1]<<16)|(h[offset+2]<<8)|h[offset+3])%1000000).padStart(6,'0');}
+$('verify').onclick=async()=>{if(busy||!original)return;busy=true;$('verify').disabled=true;try{const code=$('code').value.replace(/\s/g,''),counter=Math.floor(Date.now()/30000),codes=await Promise.all([otp(counter-1),otp(counter),otp(counter+1)]);if(/^\d{6}$/.test(code)&&codes.includes(code))message('verifyStatus','CÓDIGO CONFERIDO. O Google Authenticator corresponde à chave deste arquivo. Para entrar, use o usuário e a senha originais acima.');else message('verifyStatus','CÓDIGO NÃO CORRESPONDE A ESTE ARQUIVO. Confira o cadastro do Google Authenticator e o horário automático do Mac e do iPhone. Nenhuma senha foi modificada.',true);}catch{message('verifyStatus','Não foi possível conferir neste navegador. A cópia original e o servidor não foram alterados.',true);}finally{$('code').value='';busy=false;$('verify').disabled=false;}};
+})();
+</script></body></html>
