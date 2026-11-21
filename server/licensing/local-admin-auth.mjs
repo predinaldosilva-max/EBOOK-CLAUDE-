@@ -1,4 +1,5 @@
 const enc = new TextEncoder();
+const chosenRecords = new Map();
 export const SESSION_MS = 30 * 60 * 1000;
 export const COOKIE = '__Host-uwk_admin';
 const WINDOW_MS = 15 * 60 * 1000;
@@ -17,19 +18,29 @@ function base32(value) {
  return new Uint8Array(out);
 }
 export async function passwordRecord(password, salt=crypto.getRandomValues(new Uint8Array(16))) {
- if(typeof password!=='string'||password.length<20||password.length>256)throw Error('input');
+ if(typeof password!=='string'||password.length<16||password.length>256)throw Error('input');
  const key=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveBits']);
  const result=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations:100000},key,256);
  return 'pbkdf2-sha256$100000$'+b64(salt)+'$'+b64(new Uint8Array(result));
 }
+async function chosenPasswordRecord(password,secret,user,credential) {
+ let pending=chosenRecords.get(credential);
+ if(!pending){
+  if(chosenRecords.size>=4)chosenRecords.delete(chosenRecords.keys().next().value);
+  const salt=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode('UWK-ADMIN-PASSWORD-SALT-1|'+secret+'|'+user))).slice(0,16);
+  pending=passwordRecord(password,salt);chosenRecords.set(credential,pending);
+ }
+ try{return await pending;}catch(error){chosenRecords.delete(credential);throw error;}
+}
 async function config(env,request) {
  if(!env.DB||!/^https:\/\/[^/]+$/.test(env.ADMIN_ORIGIN||'')||new URL(request.url).origin!==env.ADMIN_ORIGIN)throw Error('configuration');
- const record=env.ADMIN_PASSWORD_RECORD,secret=env.ADMIN_SESSION_SECRET,user=env.ADMIN_USER;
- if(typeof record!=='string'||!/^pbkdf2-sha256\$100000\$[A-Za-z0-9+/]{22}==\$[A-Za-z0-9+/]{43}=$/.test(record)||typeof secret!=='string'||!/^[A-Za-z0-9+/]{43}=$/.test(secret)||typeof user!=='string'||user.length<3||user.length>100)throw Error('configuration');
+ const record=env.ADMIN_PASSWORD_RECORD,secret=env.ADMIN_SESSION_SECRET,user=env.ADMIN_USER,custom=env.ADMIN_PASSWORD!==undefined;
+ if((custom?(typeof env.ADMIN_PASSWORD!=='string'||env.ADMIN_PASSWORD.length<16||env.ADMIN_PASSWORD.length>256||env.ADMIN_PASSWORD.trim()!==env.ADMIN_PASSWORD):(typeof record!=='string'||!/^pbkdf2-sha256\$100000\$[A-Za-z0-9+/]{22}==\$[A-Za-z0-9+/]{43}=$/.test(record)))||typeof secret!=='string'||!/^[A-Za-z0-9+/]{43}=$/.test(secret)||typeof user!=='string'||user.length<3||user.length>100)throw Error('configuration');
  const totp=base32(env.ADMIN_TOTP_SECRET);
  // Changing any credential or the revocation secret immediately invalidates all sessions.
- const credential=await sha(record+'|'+env.ADMIN_TOTP_SECRET+'|'+secret+'|'+user);
- return {record,totp,user,credential};
+ const identity=custom?'chosen:'+await sha(env.ADMIN_PASSWORD):record;
+ const credential=await sha(identity+'|'+env.ADMIN_TOTP_SECRET+'|'+secret+'|'+user);
+ return {record,custom,totp,user,credential};
 }
 export async function totpCode(secret,counter) {
  const raw=typeof secret==='string'?base32(secret):secret,bytes=new Uint8Array(8);let n=BigInt(counter);
@@ -82,7 +93,8 @@ export async function localAuthRoute(request,env) {
  const data=await body(request);
  if(typeof data.user!=='string'||data.user.length>100||typeof data.password!=='string'||data.password.length<1||data.password.length>256||typeof data.code!=='string'||!/^\d{6}$/.test(data.code))return json({error:'login_failed'},401);
  // Always do the password derivation before comparing the supplied username.
- const parts=cfg.record.split('$'),key=await crypto.subtle.importKey('raw',enc.encode(data.password),'PBKDF2',false,['deriveBits']);
+ const record=cfg.custom?await chosenPasswordRecord(env.ADMIN_PASSWORD,env.ADMIN_SESSION_SECRET,cfg.user,cfg.credential):cfg.record;
+ const parts=record.split('$'),key=await crypto.subtle.importKey('raw',enc.encode(data.password),'PBKDF2',false,['deriveBits']);
  const derived=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:un64(parts[2]),iterations:100000},key,256);
  let counter=-1,current=Math.floor(now/30000);for(const c of [current-1,current,current+1])if(equal(await totpCode(cfg.totp,c),data.code))counter=Math.max(counter,c);
  if(!equal(b64(new Uint8Array(derived)),parts[3])||!equal(data.user,cfg.user)||counter<0)return json({error:'login_failed'},401);

@@ -5,7 +5,7 @@ import {totpCode} from '../server/licensing/local-admin-auth.mjs';
 const directory=mkdtempSync(join(tmpdir(),'uwk-admin-native-')),keyPath=join(directory,'fixture.key'),certPath=join(directory,'fixture.crt');
 execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',keyPath,'-out',certPath,'-subj','/CN=localhost','-days','1'],{stdio:'ignore'});
 let mf;const server=createServer({key:readFileSync(keyPath),cert:readFileSync(certPath)},async(req,res)=>{try{let chunks=[];for await(const chunk of req)chunks.push(chunk);const response=await mf.dispatchFetch(adminOrigin+req.url,{redirect:'manual',method:req.method,headers:{...req.headers,'CF-Connecting-IP':'192.0.2.1'},body:['GET','HEAD'].includes(req.method)?undefined:Buffer.concat(chunks)});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(500);res.end('Fixture transport failed');}});
-await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const adminOrigin='https://127.0.0.1:'+server.address().port,runtime=await adminRuntime(adminOrigin);mf=runtime.mf;const {db,before}=runtime,report=[];
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const adminOrigin='https://127.0.0.1:'+server.address().port,runtime=await adminRuntime(adminOrigin,{chosenPassword:true});mf=runtime.mf;const {db,before}=runtime,report=[];
 try {
  for(const [name,engine,viewport,ua]of [
   ['iPhone-WebKit',webkit,{width:390,height:844},'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'],
