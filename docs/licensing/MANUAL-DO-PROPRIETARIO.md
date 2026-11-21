@@ -14,20 +14,20 @@ O cliente comercial ainda é 2.2.6. A publicação do candidato completo, a migr
 - Não existe débito recorrente. Receba o pagamento e entregue a nova chave manualmente. Não há integração de pagamentos.
 - O vínculo é com a instalação/navegador que armazena um identificador aleatório. Não é identificação física infalível do celular. Safari, outro navegador, perfil privado ou uma PWA podem ter armazenamento diferente.
 
-## Primeiro acesso ao painel (depois da publicação)
+## Entrar e sair do painel
 
-1. Abra no computador ou celular a **URL exata que o Cloudflare retornar na publicação do Worker Admin**. Ela será registrada na etapa final; não usar um endereço inventado.
-2. Autentique-se pelo autenticação administrativa, com o email incluído pelo proprietário na política e na allowlist do Worker.
-3. Confira a visão geral. O número de legadas deve corresponder ao inventário real aprovado. As três traduções estão no seletor superior.
-4. Não há senha administrativa dentro do aplicativo. A chave 001 não serve para administrar licenças.
+1. Abra https://usa-work-kit-admin.pr-edinaldosilva.workers.dev/.
+2. Digite seu usuário e a senha escolhidos e o código atual do Google Authenticator cadastrado para este painel.
+3. Clique Entrar uma vez. Confira a visão geral e a contagem de legadas.
+4. Use Sair do painel para encerrar a sessão. Fechar a aba não garante a saída.
 
-Revogar um administrador: remover seu email da política autenticação e da configuração `ADMIN_EMAILS` do Worker Admin. Cada operação verifica novamente a allowlist e a validade/assinatura do token. Para finalizar a sessão no aparelho, usar a saída do autenticação administrativa; fechar uma aba não é garantia de encerramento de sessão.
+A sessão dura 30 minutos. Não há uma segunda senha para gerar chaves. Para substituir as credenciais do administrador, usar a configuração privada preservada; não regenerar chaves por falha isolada de login. Não alterar BATCH_EXPORT_KEY para trocar usuário/senha/Google.
 
 ## Gerar e entregar uma chave
 
 1. Em **Gerar chaves de 30 dias**, deixe quantidade 1.
 2. Opcionalmente identifique o lote; evite dados pessoais desnecessários.
-3. Confirme a geração. Ao concluir aparece a chave com botão **Copiar chave**.
+3. Clique Gerar lote. Ao concluir aparece a chave com botão **Copiar chave**.
 4. Confirme o pagamento por seu processo manual e envie a chave somente ao comprador autorizado.
 5. O comprador abre o aplicativo oficial e insere a chave completa. Somente essa ativação inicia os 30 dias.
 
@@ -35,7 +35,7 @@ Revogar um administrador: remover seu email da política autenticação e da con
 
 1. Informe a quantidade desejada (qualquer inteiro de 1 a 2.000 por lote).
 2. Identifique o lote ou revendedor, se necessário.
-3. Confirme. O processamento acontece em blocos de 20; o progresso mostra o total gerado.
+3. Clique Gerar lote. O processamento acontece em blocos de 20; o progresso mostra o total gerado.
 4. Se a conexão cair, **não gere outro lote**. Clique **Atualizar**, localize o lote incompleto e use **Retomar**.
 5. Quando estiver concluído, clique **Exportar CSV**. O arquivo contém somente chave e validade em dias após a ativação, sem senha administrativa, hashes, identificação de aparelho ou dados de clientes.
 6. Abra o CSV e confira a quantidade antes de entregar ao revendedor. Ele recebe apenas as chaves; nunca recebe acesso administrativo, D1 ou Cloudflare.
@@ -82,8 +82,8 @@ Troca de aparelho: antes, exportar financeiro e cofre e guardar a chave; depois,
 
 | Mensagem/situação | Ação |
 |---|---|
-| Configuração administrativa incompleta | Conferir Access, allowlist, origem, segredo de lotes e binding D1. O painel falha fechado. |
-| Sessão inválida | Entrar novamente pelo Access; confirmar email autorizado e horário do servidor. |
+| Configuração administrativa incompleta | Conferir a configuração do login, origem, segredo de lotes e binding D1. O painel falha fechado. |
+| Sessão inválida | Entrar novamente com seu usuário, senha e código atual do Google Authenticator. |
 | Limite de operações | Esperar 15 minutos e retomar o lote existente. Não gerar duplicatas. |
 | Queda durante geração/exportação | Atualizar a lista, retomar pelo progresso registrado e reexportar o lote pronto. |
 | Chave em outra instalação | Usar o navegador autorizado ou solicitar reset justificado. |
@@ -94,7 +94,7 @@ Troca de aparelho: antes, exportar financeiro e cofre e guardar a chave; depois,
 
 ## Custos e capacidade
 
-Nenhum plano pago, cobrança ou serviço externo de IA foi adicionado/ativado. O plano real da conta e a disponibilidade do Access gratuito precisam ser confirmados no desktop antes de publicar.
+Nenhum plano pago, cobrança ou serviço externo de IA foi adicionado/ativado. O painel usa autenticação própria; não é necessário ativar Access/Zero Trust. A operação continua sujeita às franquias gratuitas da conta.
 
 Limites documentados consultados em 21/11/2026: Workers Free 100.000 requisições/dia e 10 ms de CPU por invocação; D1 Free 5 milhões de linhas lidas/dia, 100.000 escritas/dia e 5 GB totais. Índices também contribuem para escrita. O gerador usa blocos pequenos e transações; isso não garante capacidade ilimitada. Validar uma licença também consome recursos de proteção contra abuso.
 

@@ -13,9 +13,9 @@
 
 Guardar uma exportação privada do banco pelo dashboard, quando disponível. Não enviar dump, hashes ou segredos ao chat/GitHub. Guardar backups locais financeiros e cifrados do aparelho usado nos testes. Não apagar armazenamento nem reinstalar a PWA.
 
-No D1 → usa-work-kit-db → Console, executar somente migrations/0001_temporary_licenses.sql. Esse arquivo cria quatro tabelas novas e três índices. Não contém ALTER, UPDATE ou DELETE. Não executar schema.sql, fixtures ou reseed em produção.
+No D1 → usa-work-kit-db → Console, executar docs/licensing/FINALIZAR-BANCO.sql. Esse arquivo guarda uma fotografia privada das linhas antigas numa tabela separada, aplica a migração 0001 (quatro tabelas novas e três índices) e mostra apenas contagens. A fotografia no mesmo D1 não substitui uma exportação externa do banco. Não contém ALTER, UPDATE ou DELETE. Não executar schema.sql, fixtures ou reseed em produção.
 
-Conferir o resultado e as contagens de licenses. Em ambiente com Wrangler autenticado, scripts/licensing-snapshot.py faz fotografia privada antes/depois de todas as colunas das licenças e informa somente contagem de linhas alteradas/ausentes. Sem acesso autenticado daqui, essa comparação privada não foi declarada realizada.
+Conferir originais_guardadas=50 e alteradas_ou_ausentes=0. A contagem de licenses deve permanecer original. Se diferir, investigar antes de publicar; não restaurar nem sobrescrever automaticamente. Em ambiente com Wrangler autenticado, scripts/licensing-snapshot.py faz fotografia privada antes/depois de todas as colunas das licenças e informa somente contagem de linhas alteradas/ausentes. Sem acesso autenticado daqui, essa comparação privada não foi declarada realizada.
 
 ## 2. Publicar o aplicativo atualizado
 
