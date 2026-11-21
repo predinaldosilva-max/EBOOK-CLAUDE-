@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {adminRuntime} from './helpers/admin-runtime.mjs';
+test('real workerd/D1: local login, batches 1/50/500/2000, interrupted steps, CSV pages, idempotency and 50 unchanged legacy rows',async()=>{
+ const {mf,db,before,call,login}=await adminRuntime();try{
+ assert.equal((await call('/api/overview')).status,401);const headers=await login();let allKeys=[];
+ for(const quantity of [1,50,500,2000]){
+ const operation={requestId:crypto.randomUUID(),quantity,label:'FICTITIOUS '+quantity};let response=await call('/api/batches',operation,headers);assert.equal(response.status,200);let batch=await response.json();const repeated=await(await call('/api/batches',operation,headers)).json();assert.equal(repeated.id,batch.id);
+ while(batch.status!=='ready') {const cursor=batch.completed;response=await call('/api/batches/'+batch.id+'/step',{cursor},headers);assert.equal(response.status,200);batch=await response.json();if(cursor===0){const resumed=await(await call('/api/batches/'+batch.id+'/step',{cursor},headers)).json();assert.equal(resumed.completed,batch.completed);}}
+ let cursor=0,keys=[];do{response=await call('/api/batches/'+batch.id+'/export',{cursor},headers);assert.equal(response.status,200);const exported=await response.json();keys.push(...exported.keys);cursor=exported.next;}while(cursor!==null);assert.equal(keys.length,quantity);assert.equal(new Set(keys).size,quantity);assert.ok(keys.every(k=>/^UW-[A-F0-9]{32}$/.test(k)));allKeys.push(...keys);
+ }
+ assert.equal(allKeys.length,2551);assert.equal(new Set(allKeys).size,2551);assert.deepEqual((await db.prepare("SELECT * FROM licenses WHERE id NOT LIKE 'T-%' ORDER BY id").all()).results,before);
+ assert.equal((await call('/api/revoke',{id:'001',reason:'FICTITIOUS operation',requestId:crypto.randomUUID()},headers)).status,403);
+ assert.equal((await call('/api/logout',{},headers)).status,200);assert.equal((await call('/api/overview',undefined,headers)).status,401);
+ }finally{await mf.dispose();}
+});
