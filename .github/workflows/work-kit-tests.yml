@@ -41,12 +41,12 @@ jobs:
       - run: npm ci
       - name: Trust the checked-out repository for historical upgrade fixtures
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: node tests/admin-login-browser.mjs
       - run: node tests/protection-intelligence-browser.cjs
       - run: node tests/pwa-browser.cjs
       - run: node tests/preventive-browser.cjs
       - run: node tests/earnings-audit-browser.cjs
       - run: node tests/vault-browser-upgrade.cjs
-      - run: node tests/admin-login-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

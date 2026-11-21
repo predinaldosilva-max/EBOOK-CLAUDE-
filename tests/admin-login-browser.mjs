@@ -1,8 +1,11 @@
-import assert from 'node:assert/strict';import {mkdirSync,writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';import {mkdirSync,writeFileSync,readFileSync,mkdtempSync,rmSync} from 'node:fs';import {createServer} from 'node:https';import {tmpdir} from 'node:os';import {join} from 'node:path';import {execFileSync} from 'node:child_process';
 import {chromium,webkit} from 'playwright';
-import {adminRuntime,adminOrigin,fixturePassword,fixtureTotp} from './helpers/admin-runtime.mjs';
+import {adminRuntime,fixturePassword,fixtureTotp} from './helpers/admin-runtime.mjs';
 import {totpCode} from '../server/licensing/local-admin-auth.mjs';
-const {mf,db,before}=await adminRuntime(),report=[];
+const directory=mkdtempSync(join(tmpdir(),'uwk-admin-native-')),keyPath=join(directory,'fixture.key'),certPath=join(directory,'fixture.crt');
+execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',keyPath,'-out',certPath,'-subj','/CN=localhost','-days','1'],{stdio:'ignore'});
+let mf;const server=createServer({key:readFileSync(keyPath),cert:readFileSync(certPath)},async(req,res)=>{try{let chunks=[];for await(const chunk of req)chunks.push(chunk);const response=await mf.dispatchFetch(adminOrigin+req.url,{redirect:'manual',method:req.method,headers:{...req.headers,'CF-Connecting-IP':'192.0.2.1'},body:['GET','HEAD'].includes(req.method)?undefined:Buffer.concat(chunks)});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch{res.writeHead(500);res.end('Fixture transport failed');}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const adminOrigin='https://127.0.0.1:'+server.address().port,runtime=await adminRuntime(adminOrigin);mf=runtime.mf;const {db,before}=runtime,report=[];
 try {
  for(const [name,engine,viewport,ua]of [
   ['iPhone-WebKit',webkit,{width:390,height:844},'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'],
@@ -12,8 +15,7 @@ try {
  const browser=await engine.launch({headless:true});try {for(let round=0;round<3;round++) {
   // Isolated fictional DB only: allow each browser to test the current TOTP step.
   await db.prepare('DELETE FROM admin_auth_state').run();await db.prepare('DELETE FROM admin_login_limits').run();
-  const context=await browser.newContext({viewport,userAgent:ua,acceptDownloads:true}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await context.route(adminOrigin+'/**',async route=>{const req=route.request(),response=await mf.dispatchFetch(req.url(),{redirect:'manual',method:req.method(),headers:{...await req.allHeaders(),'CF-Connecting-IP':'192.0.2.1'},body:['GET','HEAD'].includes(req.method())?undefined:req.postDataBuffer()});await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});});
+  const context=await browser.newContext({viewport,userAgent:ua,acceptDownloads:true,ignoreHTTPSErrors:true}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   try {
    await page.goto(adminOrigin+'/');await page.waitForURL('**/login');await page.locator('#language').selectOption(['pt','es','en'][round]);
    await page.locator('#user').fill('owner');await page.locator('#password').fill('wrong');await page.locator('#code').fill('000000');await page.locator('#loginButton').click();await page.waitForFunction(()=>!document.querySelector('#loginButton').disabled&&document.querySelector('#status').textContent.length>0);assert.equal(await page.locator('#password').inputValue(),'');
@@ -30,4 +32,4 @@ try {
  }
  assert.deepEqual((await db.prepare("SELECT * FROM licenses WHERE id NOT LIKE 'T-%' ORDER BY id").all()).results,before);
  mkdirSync('qa-output/admin-login-browser',{recursive:true});writeFileSync('qa-output/admin-login-browser/report.json',JSON.stringify(report,null,2));
-}finally{await mf.dispose();}
+}finally{await new Promise(resolve=>server.close(resolve));await mf.dispose();rmSync(directory,{recursive:true,force:true});}
