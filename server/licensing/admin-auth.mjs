@@ -1,6 +1,9 @@
+import {authorizeLocal} from './local-admin-auth.mjs';
 const decoder=new TextDecoder(),encoder=new TextEncoder(),cache=new Map();
 function bytes(s){if(typeof s!=='string'||!/^[A-Za-z0-9_-]+$/.test(s))throw Error('unauthorized');return Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));}
 export async function authorize(request,env){
+ if(env.ADMIN_AUTH_MODE==='local')return authorizeLocal(request,env);
+ if(env.ADMIN_AUTH_MODE&&env.ADMIN_AUTH_MODE!=='access')throw Error('configuration');
  const issuer=env.ACCESS_TEAM_DOMAIN,aud=env.ACCESS_AUD,allowed=String(env.ADMIN_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
  if(!/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(issuer||'')||typeof aud!=='string'||!aud||!allowed.length||!env.ADMIN_ORIGIN||new URL(request.url).origin!==env.ADMIN_ORIGIN)throw Error('configuration');
  const token=request.headers.get('Cf-Access-Jwt-Assertion');if(!token||token.length>16000)throw Error('unauthorized');

@@ -1,6 +1,7 @@
 import {authorize} from '../server/licensing/admin-auth.mjs';
 import {createBatch,batchStep,exportPage,changeLicense,authorizeRecovery} from '../server/licensing/batches.mjs';
 import {digest} from '../server/worker.mjs';
+import {localAuthRoute,requireLocalMutation} from '../server/licensing/local-admin-auth.mjs';
 const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"};
 const json=(x,status=200)=>new Response(JSON.stringify(x),{status,headers:{...headers,'Content-Type':'application/json'}});
 const q=(db,sql,...v)=>db.prepare(sql).bind(...v);
@@ -15,7 +16,10 @@ async function input(request){
 }
 export default {async fetch(request,env){
  try{
+  const authResponse=await localAuthRoute(request,env);if(authResponse)return new Response(authResponse.body,{status:authResponse.status,headers:{...Object.fromEntries(authResponse.headers),...headers}});
   const actor=await authorize(request,env),url=new URL(request.url),db=env.DB;if(!db)throw Error('configuration');
+  if(url.pathname==='/api/session'&&request.method==='GET')return json({local:actor.local===true,csrf:actor.csrf||null});
+  if(actor.local&&request.method==='POST')requireLocalMutation(request,env,actor);
   if(!url.pathname.startsWith('/api/')){if(!['GET','HEAD'].includes(request.method))return json({error:'method'},405);const asset=await env.ASSETS.fetch(request);return new Response(asset.body,{status:asset.status,headers:{...Object.fromEntries(asset.headers),...headers}});}
   if(!['GET','POST'].includes(request.method))return json({error:'method'},405);
   if(request.method==='POST'&&(request.headers.get('Origin')!==env.ADMIN_ORIGIN||request.headers.get('X-UWK-Admin')!=='1'))return json({error:'origin'},403);
@@ -38,5 +42,5 @@ export default {async fetch(request,env){
    const r=await q(db,`SELECT * FROM (SELECT ${columns} FROM licenses l LEFT JOIN license_terms t ON t.license_id=l.id WHERE (?='' OR ${isKey?'l.password_hash':'l.id'}=?) AND (?='' OR t.batch_id=?)) WHERE (?='' OR status=?) ORDER BY id LIMIT 50 OFFSET ?`,time,value,value,batch,batch,status,status,page*50).all();return json({licenses:r.results,page});
   }
   return json({error:'not_found'},404);
- }catch(e){const known=['configuration','unauthorized','input','size','conflict','missing','not_ready','legacy_readonly'];const code=known.includes(e.message)?e.message:'unavailable';return json({error:code},{configuration:503,unauthorized:401,input:400,size:413,conflict:409,missing:404,not_ready:409,legacy_readonly:403,unavailable:503}[code]);}
+ }catch(e){if(e.message==='unauthorized'&&env.ADMIN_AUTH_MODE==='local'&&request.method==='GET'&&!new URL(request.url).pathname.startsWith('/api/'))return new Response(null,{status:303,headers:{...headers,Location:'/login'}});const known=['configuration','unauthorized','input','size','conflict','missing','not_ready','legacy_readonly'];const code=known.includes(e.message)?e.message:'unavailable';return json({error:code},{configuration:503,unauthorized:401,input:400,size:413,conflict:409,missing:404,not_ready:409,legacy_readonly:403,unavailable:503}[code]);}
 }};

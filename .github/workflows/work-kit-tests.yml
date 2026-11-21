@@ -3,7 +3,7 @@ on:
   push:
     branches: [usa-work-kit-2-protecao-local]
   pull_request:
-    paths: ['usa-work-kit/**', 'server/**', 'tests/**', 'package*.json', 'schema.sql', 'wrangler*.jsonc']
+    paths: ['usa-work-kit/**', 'admin/**', 'migrations/**', 'server/**', 'tests/**', 'package*.json', 'schema.sql', 'wrangler*.jsonc', '.github/workflows/work-kit-tests.yml']
 permissions:
   contents: read
 jobs:
@@ -46,6 +46,7 @@ jobs:
       - run: node tests/preventive-browser.cjs
       - run: node tests/earnings-audit-browser.cjs
       - run: node tests/vault-browser-upgrade.cjs
+      - run: node tests/admin-login-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -55,3 +56,4 @@ jobs:
             qa-output/earnings-audit-browser
             qa-output/vault-browser-upgrade
             qa-output/pwa-browser
+            qa-output/admin-login-browser
