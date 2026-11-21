@@ -35,3 +35,6 @@
 #backupGuide input[type=checkbox]{width:22px;height:22px;min-height:22px;padding:0;vertical-align:middle;accent-color:var(--green)}
 
 .protection-hero{background:var(--protection-spotlight);color:var(--ink);border:2px solid var(--protection-border)}.protection-hero .btn,.earnings-hero .btn{background:var(--green);color:var(--white)}.protection-hero .shield svg{color:var(--green)}.earnings-hero{background:var(--earnings-spotlight);color:var(--ink);border:2px solid var(--earnings-border);border-radius:20px;padding:24px;margin:10px 0 24px}.earnings-hero h2{font-size:clamp(25px,6vw,34px);margin:8px 0 14px}.earnings-hero p{line-height:1.6}.earnings-hero .btn{min-height:48px}
+
+/* Small optional policy hints; existing navigation and colors are retained. */
+.policy-badge{font-size:.8em;padding:4px 8px;min-height:32px;margin:2px}.policy-related{margin:10px 0;font-size:.9em}.policy-related li{margin:8px 0}.policy-dialog{color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:var(--radius,12px);padding:20px;max-width:min(92vw,540px);max-height:85vh;overflow:auto;overflow-wrap:anywhere}.policy-dialog::backdrop{background:rgba(0,0,0,.5)}#timelineLinks label{display:block}#timelineList .prewrap{overflow-wrap:anywhere}

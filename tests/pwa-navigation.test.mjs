@@ -26,7 +26,7 @@ async function harness(source=fs.readFileSync('usa-work-kit/sw.js','utf8')) {
  return {life,request,stores,requests,setOnline:value=>online=value,get networkCalls(){return networkCalls;},get claimed(){return claimed;},get skipped(){return skipped;}};
 }
 for(let round=1;round<=3;round++)test(`PWA navigation round ${round}: index redirect, reopen, offline, unrelated cache and API isolation`,async()=>{
- const h=await harness();await h.life('install');assert.equal(h.skipped,true);assert.ok(h.requests.length>20);assert.ok(h.requests.every(url=>new URL(url).searchParams.get('__uwk_release')==='usa-work-kit-v2.2.5-r2'));
+ const h=await harness();await h.life('install');assert.equal(h.skipped,true);assert.ok(h.requests.length>20);assert.ok(h.requests.every(url=>new URL(url).searchParams.get('__uwk_release')==='usa-work-kit-v2.2.6-r1'));
  h.stores.set('unrelated-cache',new Map());h.stores.set('usa-work-kit-old',new Map());await h.life('activate');assert.equal(h.claimed,true);assert.ok(h.stores.has('unrelated-cache'));assert.ok(!h.stores.has('usa-work-kit-old'));
  for(const online of [true,false]){h.setOnline(online);for(const url of ['./','./index.html','./?reopen=1','./unknown']){
   const r=await h.request(url);assert.ok(r?.ok,url);assert.equal(r.redirected,false,`Safari rejects redirected navigation: ${url}`);assert.match(await r.text(),/html/);

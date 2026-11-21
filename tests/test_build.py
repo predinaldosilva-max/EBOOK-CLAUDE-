@@ -18,6 +18,12 @@ class BuildTests(unittest.TestCase):
         for name in module.PUBLIC:
             with self.subTest(name=name):
                 self.assertEqual((ROOT / name).read_bytes(), (self.output / name).read_bytes())
+    def test_nested_app_resources_are_exported(self):
+        parser = module.Resources()
+        parser.feed((self.output / 'usa-work-kit/index.html').read_text())
+        for resource in parser.resources:
+            with self.subTest(resource=resource):
+                self.assertTrue((self.output / 'usa-work-kit' / resource).is_file())
     def test_reject_arbitrary_destination(self):
         with self.assertRaises(ValueError):
             module.build(ROOT / 'docs')
