@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {JSDOM,VirtualConsole} from 'jsdom';import{readFileSync}from'node:fs';import{webcrypto}from'node:crypto';
+for(const lang of ['pt','es','en'])for(const device of ['iPhone','Android','desktop'])test(`${device}/${lang}: small local insights refresh without changing records, offer evaluation or navigation`,async()=>{
+ const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));const dom=new JSDOM('<main id="host"></main>',{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window;
+ Object.defineProperty(w,'crypto',{value:webcrypto});Object.defineProperty(w.navigator,'userAgent',{value:device});w.confirm=()=>true;
+ for(const f of ['translations','reports','protection-i18n','protection-daily-i18n','v22-i18n','earnings','earnings-insights','earnings-insights-text','earnings-ui'])w.eval(readFileSync(new URL('../usa-work-kit/js/'+f+'.js',import.meta.url),'utf8'));
+ const settings=w.Earnings.settings({fuelPrice:3,wearPerMile:.1,minHourly:30}),records=Array.from({length:10},(_,i)=>w.Earnings.record({platform:'Instacart',store:'<img src=x onerror=alert(1)>',total:30,miles:10,minutes:60,waiting:15,at:new Date(Date.now()-i*1000).toISOString()},settings));const state={records,settings,configured:true},before=JSON.stringify(state);
+ const adapter={snapshot:()=>({earnings:state}),async deleteEarning(id){state.records=state.records.filter(r=>r.id!==id);}};
+ try{const host=w.document.querySelector('#host');w.EarningsUI.mount(host,{vault:adapter,lang});assert.equal(JSON.stringify(state),before);const cards=host.querySelectorAll('[data-insight]');assert.ok(cards.length>=1&&cards.length<=3);for(const card of cards)assert.ok(card.textContent.includes(w.EarningsInsightsText.TEXT[lang].based));assert.equal(host.querySelector('#mapInsights img'),null);assert.equal(host.querySelectorAll('nav').length,0);
+ host.querySelector('#offerTotal').value=30;host.querySelector('#offerMiles').value=10;host.querySelector('#offerMinutes').value=60;host.querySelector('#offerForm').dispatchEvent(new w.Event('input'));assert.ok(host.querySelector('#offerVerdict').textContent.includes(new Intl.NumberFormat({pt:'pt-BR',es:'es-US',en:'en-US'}[lang],{style:'currency',currency:'USD'}).format(records[0].net)));
+ host.querySelector('[data-order-delete]').click();for(let i=0;i<30&&host.querySelector('[data-insight]')?.dataset.insight!=='insufficient';i++)await new Promise(r=>setTimeout(r,5));assert.equal(state.records.length,9);assert.equal(host.querySelector('[data-insight]').dataset.insight,'insufficient');assert.ok(host.querySelector('#mapSettingsForm'));assert.ok(host.querySelector('#orderForm'));assert.deepEqual(errors,[]);
+ // Restore the old records through the existing adapter: insights reappear from
+ // records alone, without storing a second financial total or derived state.
+ state.records=JSON.parse(before).records;w.EarningsUI.mount(host,{vault:adapter,lang});assert.equal(host.querySelector('[data-insight]').dataset.insight,'belowMinimum');
+ }finally{w.EarningsUI.leave();dom.window.close();}
+});
