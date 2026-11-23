@@ -11,5 +11,16 @@ for(const lang of ['pt','es','en'])for(const device of ['iPhone','Android','desk
  // Restore the old records through the existing adapter: insights reappear from
  // records alone, without storing a second financial total or derived state.
  state.records=JSON.parse(before).records;w.EarningsUI.mount(host,{vault:adapter,lang});assert.equal(host.querySelector('[data-insight]').dataset.insight,'belowMinimum');
+ const recent=new Date(Date.now()-86400000),earlier=new Date(+recent-7*86400000);
+ state.records=Array.from({length:10},(_,i)=>w.Earnings.record({
+  platform:'Instacart',store:'<img src=x>',region:'Queens',total:30,miles:10,minutes:60,
+  at:(i<5?recent:earlier).toISOString()
+ },settings));
+ w.EarningsUI.mount(host,{vault:adapter,lang});
+ const recommendation=host.querySelector('[data-recommendation="historical"]');
+ assert.ok(recommendation?.textContent.includes('Queens'));
+ assert.ok(recommendation.textContent.includes('<img src=x>'));
+ assert.equal(recommendation.querySelector('img'),null);
+ assert.equal(host.querySelector('#orderRegion').closest('details'),null);
  }finally{w.EarningsUI.leave();dom.window.close();}
 });

@@ -38,6 +38,28 @@ function analyze(records,config,options={}){
  if(!out.length){const n=Math.max(0,LIMITS.window-Math.max(0,...groups(zoned,r=>r.weekday+'|'+r.window).map(g=>g.length)));out.push(make('insufficient',0,n?'moreWindow':'noContrast',{needed:n}));}
  return out.sort((a,b)=>b.priority-a.priority||a.type.localeCompare(b.type));
 }
+const RECOMMENDATION_LIMITS=Object.freeze({orders:10,dates:2,lookbackDays:90,maxPlaces:3});
+const normalized=value=>value.normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase();
+function recommend(records,config,options={}){
+ const settings=E.settings(config);checkRows(records);
+ const now=new Date(options.now??Date.now()),zone=options.timeZone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+ if(!Number.isFinite(now.getTime()))throw Error('invalidRecord');
+ const local=day(now,zone),parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:zone,minute:'2-digit'}).formatToParts(now).map(p=>[p.type,p.value]));
+ const cutoff=now.getTime()-RECOMMENDATION_LIMITS.lookbackDays*86400000;
+ const rows=records.filter(r=>r.timeZone===zone&&Date.parse(r.at)<=now&&Date.parse(r.at)>=cutoff);
+ const today=rows.filter(r=>r.localDate===local.date),remaining=Math.max(0,settings.dailyGoal-sum(today,'net'));
+ const located=rows.filter(r=>r.region.trim()),sets=groups(located,r=>JSON.stringify([normalized(r.store),normalized(r.region),normalized(r.platform),r.weekday,r.window]));
+ const qualified=sets.filter(g=>g.length>=RECOMMENDATION_LIMITS.orders&&new Set(g.map(r=>r.localDate)).size>=RECOMMENDATION_LIMITS.dates);
+ const places=qualified.map(g=>{
+  const label=g.reduce((a,b)=>a.at>b.at?a:b),minutes=sum(g,'minutes'),net=sum(g,'net');
+  return {store:label.store.trim(),region:label.region.trim(),platform:label.platform.trim(),weekday:label.weekday,start:label.window,end:label.window+3,timeZone:zone,count:g.length,dates:new Set(g.map(r=>r.localDate)).size,hourly:net*60/minutes,averageNet:net/g.length,belowMinimum:net*60/minutes<settings.minHourly};
+ }).filter(p=>p.hourly>0).sort((a,b)=>b.hourly-a.hourly||b.dates-a.dates||b.count-a.count||a.weekday-b.weekday||a.start-b.start||a.store.localeCompare(b.store)||a.region.localeCompare(b.region)||a.platform.localeCompare(b.platform));
+ const weekday=new Date(local.date+'T12:00:00Z').getUTCDay(),minute=local.hour*60+Number(parts.minute),todayPlace=places.find(p=>p.weekday===weekday&&p.end*60>minute);
+ const todaySuggestion=todayPlace?{...todayPlace,estimatedMinutes:Math.ceil(remaining*60/todayPlace.hourly),availableMinutes:todayPlace.end*60-Math.max(minute,todayPlace.start*60)}:null;
+ const progress=sets.map(g=>({count:g.length,dates:new Set(g.map(r=>r.localDate)).size})).sort((a,b)=>Math.min(b.count,10)-Math.min(a.count,10)||b.dates-a.dates)[0]||{count:0,dates:0};
+ return {source:'personal-records',guaranteed:false,timeZone:zone,lookbackDays:RECOMMENDATION_LIMITS.lookbackDays,minimumOrders:RECOMMENDATION_LIMITS.orders,minimumDates:RECOMMENDATION_LIMITS.dates,eligibleCount:rows.length,missingRegion:rows.length-located.length,state:places.length?'ready':qualified.length?'noPositive':!located.length&&rows.length?'regionNeeded':'insufficient',neededOrders:Math.max(0,RECOMMENDATION_LIMITS.orders-progress.count),neededDates:Math.max(0,RECOMMENDATION_LIMITS.dates-progress.dates),remaining,places:places.slice(0,RECOMMENDATION_LIMITS.maxPlaces),today:todaySuggestion};
+}
+
 function generate(records,settings,options={}){return analyze(records,settings,options).slice(0,LIMITS.maxCards);}
-const api={LIMITS,analyze,generate};root.EarningsInsights=api;if(typeof module!=='undefined')module.exports=api;
+const api={LIMITS,analyze,generate,RECOMMENDATION_LIMITS,recommend};root.EarningsInsights=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

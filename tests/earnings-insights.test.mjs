@@ -36,3 +36,27 @@ test('invalid records, future-only samples, zero/negative comparison baselines a
 test('10,000 frozen observations remain local, unchanged and limited to three derived cards',()=>{
  const base=batch(1)[0],rows=Object.freeze(Array.from({length:10000},(_,i)=>Object.freeze({...base,id:'fixture-'+i}))),start=performance.now(),out=I.generate(rows,settings,options);assert.ok(out.length<=3);assert.equal(rows.length,10000);assert.equal(rows[0].net,base.net);assert.ok(out.every(i=>!Object.hasOwn(i,'records')));console.log('insight 10k-record generation: '+Math.round(performance.now()-start)+' ms');
 });
+
+test('personal recommendations require ten comparable orders across two dates',()=>{
+ const place={store:'Costco',region:'Queens',at:'2026-11-21T15:00:00Z'};
+ const earlier={...place,store:' COSTCO ',region:'QUEENS',at:'2026-11-14T15:00:00Z'};
+ const rows=[...batch(5,place),...batch(5,earlier)];
+ assert.equal(I.recommend(batch(10,place),settings,options).state,'insufficient');
+ assert.equal(I.recommend(rows.slice(1),settings,options).state,'insufficient');
+ for(const difference of [{region:'Brooklyn'},{platform:'DoorDash'},{store:'Target'},
+   {at:'2026-11-13T15:00:00Z'},{at:'2026-11-14T18:00:00Z'}]){
+  assert.equal(I.recommend([...batch(5,place),...batch(5,{...earlier,...difference})],settings,options).state,'insufficient');
+ }
+ const result=I.recommend(rows,settings,options);
+ assert.equal(result.state,'ready');
+ assert.equal(result.places.length,1);
+ assert.equal(result.today.store,'Costco');
+ assert.equal(result.today.region,'Queens');
+ assert.equal(result.today.count,10);
+ assert.equal(result.today.dates,2);
+ assert.ok(Math.abs(result.today.hourly-rows[0].net)<1e-9);
+ assert.equal(result.today.availableMinutes,120);
+ assert.equal(result.remaining,settings.dailyGoal-5*rows[0].net);
+ assert.equal(I.recommend(rows,settings,{...options,now:'2026-11-21T18:00:00Z'}).today,null);
+ assert.equal(I.recommend(rows,settings,{...options,now:'2027-03-01T18:00:00Z'}).state,'insufficient');
+});
